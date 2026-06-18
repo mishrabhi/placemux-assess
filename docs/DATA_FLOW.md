@@ -10,7 +10,7 @@ flowchart LR
     Candidate(["👤 Candidate"])
     Admin(["🛠️ Admin"])
     AIML(["🤖 AI/ML Service\n(External)"])
-    Platform["nexus-assess\n9 Microservices"]
+    Platform["placemux-assess\n9 Microservices"]
 
     Candidate -->|"Register, Login, Take Test, View Result"| Platform
     Admin -->|"Manage Skills, Questions, View Reports"| Platform

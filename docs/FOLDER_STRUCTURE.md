@@ -7,7 +7,7 @@
 
 
 ```
-nexus-assess/
+placemux-assess/
 │
 ├── docker-compose.yml                  # Spins up all 9 services + MongoDB + Redis + RabbitMQ locally
 ├── README.md

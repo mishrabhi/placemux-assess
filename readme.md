@@ -1,4 +1,4 @@
-# nexus-assess
+# placemux-assess
 
 > A modular Node.js + Express assessment platform with AI-powered evaluation, real-time proctoring, and skill-based test generation — built for scale.
 
@@ -50,7 +50,7 @@
 ## Project Structure
 
 ```
-nexus-assess/
+placemux-assess/
 ├── api-gateway/
 ├── auth-service/
 ├── user-service/
