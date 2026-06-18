@@ -1,16 +1,19 @@
-# 🗂️ Class Diagram
+# Class Diagram
 
-> Represents the Mongoose models (collections), their fields, types, and relationships across the `skill_assessment_db` MongoDB database.
+> Each service owns its own MongoDB database. Models are grouped by service.
+> Cross-service references store the remote `ObjectId` only — no joins, no shared collections.
 
 
 
-## Class Diagram
+## Full Class Diagram
 
 ```mermaid
 classDiagram
-
-    %% ── AUTH ──────────────────────────────────────────────
+    %% ═══════════════════════════════════════
+    %% AUTH SERVICE — auth_db
+    %% ═══════════════════════════════════════
     class User {
+        <<auth_db>>
         +ObjectId _id
         +String email
         +String password
@@ -23,6 +26,7 @@ classDiagram
     }
 
     class RefreshToken {
+        <<auth_db>>
         +ObjectId _id
         +ObjectId userId
         +String token
@@ -30,8 +34,11 @@ classDiagram
         +Date createdAt
     }
 
-    %% ── USER ──────────────────────────────────────────────
+    %% ═══════════════════════════════════════
+    %% USER SERVICE — user_db
+    %% ═══════════════════════════════════════
     class Profile {
+        <<user_db>>
         +ObjectId _id
         +ObjectId userId
         +String fullName
@@ -44,13 +51,17 @@ classDiagram
     }
 
     class SkillRef {
+        <<embedded in Profile>>
         +ObjectId skillId
         +String skillName
         +Date selectedAt
     }
 
-    %% ── SKILLS & QUESTIONS ────────────────────────────────
+    %% ═══════════════════════════════════════
+    %% QUESTION BANK SERVICE — question_bank_db
+    %% ═══════════════════════════════════════
     class Skill {
+        <<question_bank_db>>
         +ObjectId _id
         +String name
         +String category
@@ -59,6 +70,7 @@ classDiagram
     }
 
     class Question {
+        <<question_bank_db>>
         +ObjectId _id
         +ObjectId skillId
         +String type
@@ -75,19 +87,24 @@ classDiagram
     }
 
     class CodingMeta {
+        <<embedded in Question>>
         +String[] allowedLanguages
         +String starterCode
         +TestCase[] testCases
     }
 
     class TestCase {
+        <<embedded in CodingMeta>>
         +String input
         +String expectedOutput
         +Boolean isHidden
     }
 
-    %% ── ASSESSMENT ────────────────────────────────────────
+    %% ═══════════════════════════════════════
+    %% ASSESSMENT SERVICE — assessment_db
+    %% ═══════════════════════════════════════
     class TestSession {
+        <<assessment_db>>
         +ObjectId _id
         +ObjectId userId
         +ObjectId[] skillsSelected
@@ -104,14 +121,18 @@ classDiagram
     }
 
     class QuestionRef {
+        <<embedded in TestSession>>
         +ObjectId questionId
         +String type
         +Number orderIndex
         +Number maxScore
     }
 
-    %% ── PROCTORING ────────────────────────────────────────
+    %% ═══════════════════════════════════════
+    %% PROCTORING SERVICE — proctoring_db
+    %% ═══════════════════════════════════════
     class ProctoringEvent {
+        <<proctoring_db>>
         +ObjectId _id
         +ObjectId testSessionId
         +ObjectId userId
@@ -122,6 +143,7 @@ classDiagram
     }
 
     class ViolationCounter {
+        <<proctoring_db>>
         +ObjectId _id
         +ObjectId testSessionId
         +ObjectId userId
@@ -130,8 +152,11 @@ classDiagram
         +Date lastUpdatedAt
     }
 
-    %% ── SUBMISSION ────────────────────────────────────────
+    %% ═══════════════════════════════════════
+    %% SUBMISSION SERVICE — submission_db
+    %% ═══════════════════════════════════════
     class Submission {
+        <<submission_db>>
         +ObjectId _id
         +ObjectId testSessionId
         +ObjectId userId
@@ -141,6 +166,7 @@ classDiagram
     }
 
     class Answer {
+        <<embedded in Submission>>
         +ObjectId questionId
         +String questionType
         +String answer
@@ -149,8 +175,11 @@ classDiagram
         +Number timeTakenSeconds
     }
 
-    %% ── RESULT ────────────────────────────────────────────
+    %% ═══════════════════════════════════════
+    %% RESULT SERVICE — result_db
+    %% ═══════════════════════════════════════
     class Result {
+        <<result_db>>
         +ObjectId _id
         +ObjectId testSessionId
         +ObjectId userId
@@ -164,8 +193,11 @@ classDiagram
         +Date createdAt
     }
 
-    %% ── NOTIFICATION ──────────────────────────────────────
+    %% ═══════════════════════════════════════
+    %% NOTIFICATION SERVICE — notification_db
+    %% ═══════════════════════════════════════
     class Notification {
+        <<notification_db>>
         +ObjectId _id
         +ObjectId userId
         +String type
@@ -176,63 +208,73 @@ classDiagram
         +Date createdAt
     }
 
-    %% ── RELATIONSHIPS ─────────────────────────────────────
+    %% ═══════════════════════════════════════
+    %% RELATIONSHIPS
+    %% ═══════════════════════════════════════
 
+    %% auth_db
     User "1" --> "0..*" RefreshToken : has
-    User "1" --> "1" Profile : has
-    Profile "1" --> "0..*" SkillRef : selectedSkills
-    SkillRef "0..*" --> "1" Skill : references
 
+    %% user_db
+    Profile "1" --> "0..*" SkillRef : selectedSkills
+
+    %% question_bank_db
     Skill "1" --> "0..*" Question : has
     Question "1" --> "0..1" CodingMeta : has
-    CodingMeta "1" --> "0..*" TestCase : has
+    CodingMeta "1" --> "0..*" TestCase : contains
 
-    User "1" --> "0..*" TestSession : takes
+    %% assessment_db
     TestSession "1" --> "0..*" QuestionRef : contains
-    QuestionRef "0..*" --> "1" Question : references
-    TestSession "1" --> "0..*" Skill : based on
 
+    %% proctoring_db
     TestSession "1" --> "0..*" ProctoringEvent : generates
     TestSession "1" --> "1" ViolationCounter : tracked by
 
-    TestSession "1" --> "1" Submission : has
+    %% submission_db
     Submission "1" --> "0..*" Answer : contains
-    Answer "0..*" --> "1" Question : answers
 
-    Submission "1" --> "1" Result : evaluated into
-    User "1" --> "0..*" Notification : receives
+    %% cross-service references (ObjectId only — no joins)
+    Profile ..> User : userId ref
+    SkillRef ..> Skill : skillId ref
+    TestSession ..> User : userId ref
+    QuestionRef ..> Question : questionId ref
+    ProctoringEvent ..> TestSession : testSessionId ref
+    ViolationCounter ..> TestSession : testSessionId ref
+    Submission ..> TestSession : testSessionId ref
+    Result ..> Submission : testSessionId ref
+    Notification ..> User : userId ref
 ```
 
 
+## Cross-Service Reference Rules
 
-## Field Type Reference
+> Since each service has its own database, these are **reference-only** — no joins happen at the DB level.
+> The owning service is responsible for fetching related data via HTTP when needed.
 
-| Type | Description |
-|---|---|
-| `ObjectId` | MongoDB document reference (`_id` or foreign key ref) |
-| `String` | Text field — enums noted in schema |
-| `Number` | Integer or float |
-| `Boolean` | true / false flag |
-| `Date` | ISO timestamp |
-| `[]` | Array of the noted type |
-
+| Reference (stored as ObjectId) | Stored In | Owned By |
+|---|---|---|
+| `userId` | Profile, TestSession, ProctoringEvent, ViolationCounter, Submission, Result, Notification | Auth Service |
+| `skillId` | SkillRef (in Profile), TestSession.skillsSelected | Question Bank Service |
+| `questionId` | QuestionRef (in TestSession), Answer (in Submission) | Question Bank Service |
+| `testSessionId` | ProctoringEvent, ViolationCounter, Submission, Result | Assessment Service |
 
 
-## Enum Values Quick Reference
 
-| Field | Allowed Values |
-|---|---|
-| `User.role` | `candidate` · `admin` |
-| `User.experienceLevel` | `fresher` · `experienced` |
-| `Question.type` | `mcq` · `technical` · `coding` |
-| `Question.difficulty` | `easy` · `medium` · `hard` |
-| `Question.experienceLevel` | `fresher` · `experienced` · `both` |
-| `TestSession.status` | `created` · `permission_pending` · `in_progress` · `submitted` · `terminated` · `expired` |
-| `ViolationCounter.status` | `active` · `warned` · `barred` |
-| `ProctoringEvent.eventType` | `face_not_detected` · `multiple_faces` · `tab_switch` · `noise_detected` · `no_camera` |
-| `ProctoringEvent.severity` | `low` · `medium` · `high` |
-| `Submission.evaluationStatus` | `pending` · `in_progress` · `completed` · `failed` |
-| `Result.verdict` | `pass` · `fail` |
-| `Notification.type` | `warning` · `submission_received` · `result_ready` |
-| `Notification.channel` | `email` · `push` |
-| `Notification.status` | `queued` · `sent` · `failed` |
+## Enum Values Reference
+
+| Model | Field | Allowed Values |
+|---|---|---|
+| User | role | `candidate` · `admin` |
+| User | experienceLevel | `fresher` · `experienced` |
+| Question | type | `mcq` · `technical` · `coding` |
+| Question | difficulty | `easy` · `medium` · `hard` |
+| Question | experienceLevel | `fresher` · `experienced` · `both` |
+| TestSession | status | `created` · `permission_pending` · `in_progress` · `submitted` · `terminated` · `expired` |
+| ProctoringEvent | eventType | `face_not_detected` · `multiple_faces` · `tab_switch` · `noise_detected` · `no_camera` |
+| ProctoringEvent | severity | `low` · `medium` · `high` |
+| ViolationCounter | status | `active` · `warned` · `barred` |
+| Submission | evaluationStatus | `pending` · `in_progress` · `completed` · `failed` |
+| Result | verdict | `pass` · `fail` |
+| Notification | type | `warning` · `submission_received` · `result_ready` |
+| Notification | channel | `email` · `push` |
+| Notification | status | `queued` · `sent` · `failed` |

@@ -1,109 +1,98 @@
-# Data Flow Diagram
+# 🔄 Data Flow Diagram
 
-> Traces how data moves through the system across all major user journeys — from signup to final result.
+> Traces how data moves across all 9 services from signup through to final result delivery.
 
 
-
-## Level 0 — System Context (Bird's Eye View)
+## Level 0 — System Context
 
 ```mermaid
 flowchart LR
     Candidate(["👤 Candidate"])
     Admin(["🛠️ Admin"])
-    AIML(["🤖 AI/ML Service"])
-    System["⬛ nexus-assess\nPlatform"]
+    AIML(["🤖 AI/ML Service\n(External)"])
+    Platform["nexus-assess\n9 Microservices"]
 
-    Candidate -->|"Register · Login · Take Test · View Result"| System
-    Admin -->|"Manage Skills · Questions · View Reports"| System
-    System -->|"Evaluation Request (answers + session)"| AIML
-    AIML -->|"Scores · Verdict · Feedback"| System
-    System -->|"Result · Notifications"| Candidate
+    Candidate -->|"Register, Login, Take Test, View Result"| Platform
+    Admin -->|"Manage Skills, Questions, View Reports"| Platform
+    Platform -->|"Evaluation request — answers and session data"| AIML
+    AIML -->|"Scores, verdict, feedback"| Platform
+    Platform -->|"Result and notifications"| Candidate
 ```
 
-
-
-## Level 1 — Full Data Flow
+## Level 1 — Full End-to-End Data Flow
 
 ```mermaid
 flowchart TD
-    %% ── ACTOR ──────────────────────────────────────────
-    C(["Candidate"])
+    C(["👤 Candidate"])
 
-    %% ── AUTH FLOW ───────────────────────────────────────
-    subgraph AuthFlow["1️⃣  Auth Flow"]
-        A1["POST /auth/signup\nor /auth/login"]
-        A2["Auth Module\nValidate · Hash · Issue JWT"]
-        A3[("users\nrefreshTokens")]
-        A4["JWT Access Token\n+ Refresh Token"]
+    subgraph Step1["1️⃣  Auth Flow"]
+        A1["POST /api/auth/signup\nPOST /api/auth/login"]
+        A2["Auth Service\nValidate, hash, issue JWT"]
+        A3[("auth_db\nusers, refreshTokens")]
+        A4["JWT Access Token + Refresh Token"]
     end
 
-    %% ── PROFILE & SKILL SELECTION ────────────────────────
-    subgraph ProfileFlow["2️⃣  Profile & Skill Selection"]
-        P1["PUT /users/profile\nPOST /users/profile/skills"]
-        P2["User Module\nSave Profile · Record Skills"]
-        P3[("profiles")]
-        P4["GET /skills\n→ Skills list to client"]
-        P5[("skills")]
+    subgraph Step2["2️⃣  Profile and Skill Selection"]
+        P1["PUT /api/users/profile\nPOST /api/users/profile/skills"]
+        P2["User Service\nSave profile, record skills"]
+        P3[("user_db\nprofiles")]
+        P4["GET /api/skills"]
+        P5["Question Bank Service\nReturn skills list"]
+        P6[("question_bank_db\nskills")]
     end
 
-    %% ── SESSION CREATION ─────────────────────────────────
-    subgraph SessionFlow["3️⃣  Test Session Creation"]
-        S1["POST /assessments"]
-        S2["Assessment Module\nFilter questions by\nskill + level + difficulty"]
-        S3[("questions")]
-        S4[("testSessions\n(status: created)")]
+    subgraph Step3["3️⃣  Test Session Creation"]
+        S1["POST /api/assessments"]
+        S2["Assessment Service\nHTTP GET → Question Bank Service\nFilter by skill + level + difficulty"]
+        S3[("question_bank_db\nquestions")]
+       S4[("assessment_db\ntestSessions | status: created")]
         S5["Session ID returned to client"]
     end
 
-    %% ── PROCTORING SETUP ─────────────────────────────────
-    subgraph ProctorSetup["4️⃣  Proctoring Permissions"]
-        PR1["PATCH /assessments/:id/permissions\n(camera: true, mic: true)"]
-        PR2["Proctoring Module\nRecord permissions"]
-        PR3[("testSessions\n(status: permission_pending\n→ in_progress)")]
+    subgraph Step4["4️⃣  Proctoring Permissions"]
+        PR1["PATCH /api/assessments/:id/permissions\ncamera: true, mic: true"]
+        PR2["Assessment Service\nRecord permissions"]
+        PR3[("assessment_db\ntestSessions | status: permission_pending")]
+        PR4["PATCH /api/assessments/:id/start"]
+        PR5[("assessment_db\ntestSessions | status: in_progress")]
     end
 
-    %% ── LIVE TEST + PROCTORING ───────────────────────────
-    subgraph LiveTest["5️⃣  Live Test + Real-time Proctoring"]
-        direction LR
-        LT1["Candidate answers questions\n(MCQ · Technical · Coding)"]
-        LT2["Socket.io Events\n(face_not_detected · tab_switch · etc.)"]
-        LT3["Proctoring Module\nLog event · Increment counter"]
-        LT4[("proctoringEvents\nviolationCounters")]
-        LT5{"warnings ≥\nthreshold?"}
-        LT6["assessmentService\n.terminateSession()\n→ status: terminated"]
-        LT7["⚠️ Warning sent\nto client via Socket"]
-        LT8["Timer & session state\ncached in Redis"]
+    subgraph Step5["5️⃣  Live Test and Proctoring"]
+        LT1["Candidate answers questions\nMCQ, Technical, Coding"]
+        LT2["Socket.io Violation Event\nface_not_detected, tab_switch, etc."]
+        LT3["Proctoring Service\nLog event, increment counter\nUpdate Redis live count"]
+        LT4[("proctoring_db\nproctoringEvents\nviolationCounters")]
+        LT5{"warnings\ngreater than or equal to\nthreshold?"}
+        LT6["HTTP PATCH\nAssessment Service\nstatus: terminated"]
+        LT7["emit warning to client\nvia Socket.io"]
+        LT8[("Redis\nLive session timer\nWarning count")]
     end
 
-    %% ── SUBMISSION ───────────────────────────────────────
-    subgraph SubFlow["6️⃣  Submission"]
-        SB1["POST /submissions/:sessionId"]
-        SB2["Submission Module\nValidate session · Check idempotency"]
-        SB3[("submissions\nevaluationStatus: pending)")]
-        SB4["Push job to\nBull Queue"]
-        SB5["202 Accepted\nreturned to client"]
+    subgraph Step6["6️⃣  Submission"]
+        SB1["POST /api/submissions/:sessionId"]
+        SB2["Submission Service\nValidate session via HTTP GET Assessment Service\nCheck idempotency on testSessionId"]
+        SB3[("submission_db\nsubmissions | evaluationStatus: pending")]
+        SB4["Publish to RabbitMQ\nsubmission.created"]
+        SB5["202 Accepted → client"]
     end
 
-    %% ── ASYNC EVALUATION PIPELINE ────────────────────────
-    subgraph EvalFlow["7️⃣  Async AI Evaluation Pipeline"]
-        E1["evaluation.job.js\n(Bull Queue Consumer)"]
-        E2["HTTP POST →\nAI/ML Evaluation Endpoint"]
-        E3["AI evaluates:\nMCQ (rule-based)\nTechnical + Coding (AI model)"]
-        E4["scores · verdict · feedback\nreturned"]
-        E5["Result Module\nSave result to DB"]
-        E6[("results\nevaluationStatus: completed")]
-        E7["Notification Module\nSend result email/push"]
-        E8[("notifications")]
+    subgraph Step7["7️⃣  Async AI Evaluation Pipeline"]
+        E1["evaluation.consumer.js\nin Result Service\nconsumes submission.created"]
+        E2["HTTP POST → AI/ML Endpoint\nanswers + session + skills"]
+        E3["AI Model Evaluates\nMCQ: rule-based\nTechnical and Coding: AI model"]
+        E4["scores, verdict, feedback returned"]
+        E5["Result Service\nSave to result_db"]
+        E6[("result_db\nresults | evaluationStatus: completed")]
+        E7["HTTP POST → Notification Service\ntrigger result_ready"]
+        E8[("notification_db\nnotifications")]
+        E9["Email or Push sent to candidate"]
     end
 
-    %% ── RESULT FETCH ─────────────────────────────────────
-    subgraph ResultFlow["8️⃣  Result Fetch"]
-        R1["GET /results/:sessionId"]
-        R2["Result Module\nFetch from results collection"]
-        R3["Return: scores · verdict · feedback"]
+    subgraph Step8["8️⃣  Result Fetch"]
+        R1["GET /api/results/:sessionId"]
+        R2["Result Service\nFetch from result_db"]
+        R3["Return: scores, verdict, feedback"]
     end
-
-    %% ── CONNECTIONS ──────────────────────────────────────
 
     C --> A1
     A1 --> A2
@@ -114,8 +103,10 @@ flowchart TD
     C -->|"authenticated"| P1
     P1 --> P2
     P2 --> P3
+    C --> P4
     P4 --> P5
-    P4 --> C
+    P5 --> P6
+    P5 --> C
 
     C --> S1
     S1 --> S2
@@ -127,16 +118,19 @@ flowchart TD
     C --> PR1
     PR1 --> PR2
     PR2 --> PR3
+    C --> PR4
+    PR4 --> PR5
 
-    PR3 -->|"test starts"| LT1
+    PR5 -->|"test begins"| LT1
     LT1 --> LT8
     LT2 --> LT3
     LT3 --> LT4
+    LT3 --> LT8
     LT3 --> LT5
     LT5 -->|"No"| LT7
     LT7 --> C
     LT5 -->|"Yes"| LT6
-    LT6 --> PR3
+    LT6 -->|"PATCH"| PR5
 
     LT1 --> SB1
     SB1 --> SB2
@@ -153,7 +147,8 @@ flowchart TD
     E5 --> E6
     E5 --> E7
     E7 --> E8
-    E7 -->|"email / push"| C
+    E7 --> E9
+    E9 --> C
 
     C --> R1
     R1 --> R2
@@ -162,82 +157,98 @@ flowchart TD
 ```
 
 
-
-## Level 2 — Submission to Result (Zoomed In)
+## Level 2 — Submission to Result (Sequence Diagram)
 
 ```mermaid
 sequenceDiagram
     actor Candidate
-    participant API as Express API
-    participant SubSvc as Submission Service
-    participant SubDB as submissions (MongoDB)
-    participant Queue as Bull Queue (Redis)
-    participant Job as evaluation.job.js
-    participant AI as AI/ML Endpoint
-    participant ResDB as results (MongoDB)
-    participant NotifSvc as Notification Service
+    participant GW as API Gateway
+    participant SS as Submission Service
+    participant AMS as Assessment Service
+    participant SubDB as submission_db
+    participant MQ as RabbitMQ
+    participant Consumer as evaluation.consumer.js
+    participant AIEP as AI/ML Endpoint
+    participant RS as Result Service
+    participant ResDB as result_db
+    participant NS as Notification Service
+    participant NotifDB as notification_db
 
-    Candidate->>API: POST /submissions/:sessionId
-    API->>SubSvc: validateSession() + checkIdempotency()
-    SubSvc->>SubDB: save answers (evaluationStatus: pending)
-    SubSvc->>Queue: push evaluation job
-    API-->>Candidate: 202 Accepted
+    Candidate->>GW: POST /api/submissions/:sessionId
+    GW->>SS: forward request (JWT verified)
+    SS->>AMS: GET /api/assessments/:sessionId (validate session is in_progress)
+    AMS-->>SS: session valid
+    SS->>SubDB: check idempotency (unique testSessionId)
+    SS->>SubDB: save answers (evaluationStatus: pending)
+    SS->>MQ: publish submission.created
+    SS-->>GW: 202 Accepted
+    GW-->>Candidate: 202 Accepted
 
-    Note over Queue,Job: Async — decoupled from HTTP response
+    Note over MQ,Consumer: Async — fully decoupled from HTTP response
 
-    Queue->>Job: dequeue job (testSessionId + answers)
-    Job->>SubDB: update evaluationStatus → in_progress
-    Job->>AI: POST { answers, skills, experienceLevel }
-    AI-->>Job: { mcqScore, technicalScore, codingScore, verdict, feedback }
-    Job->>ResDB: save result (verdict, scores, feedback)
-    Job->>SubDB: update evaluationStatus → completed
-    Job->>NotifSvc: triggerNotification(userId, result_ready)
-    NotifSvc-->>Candidate: Email / Push — "Your result is ready"
+    MQ->>Consumer: deliver submission.created event
+    Consumer->>SubDB: update evaluationStatus to in_progress
+    Consumer->>AIEP: POST { answers, skills, experienceLevel }
+    AIEP-->>Consumer: { mcqScore, technicalScore, codingScore, verdict, feedback }
+    Consumer->>RS: save result
+    RS->>ResDB: insert result document
+    Consumer->>SubDB: update evaluationStatus to completed
+    RS->>NS: POST /internal/notify { userId, type: result_ready }
+    NS->>NotifDB: log notification
+    NS-->>Candidate: Email or Push — Your result is ready
 
-    Candidate->>API: GET /results/:sessionId
-    API-->>Candidate: { verdict, scores, feedback }
+    Candidate->>GW: GET /api/results/:sessionId
+    GW->>RS: forward request
+    RS->>ResDB: fetch result by testSessionId
+    RS-->>GW: { verdict, scores, feedback }
+    GW-->>Candidate: result payload
 ```
 
 
-
-## Level 2 — Proctoring Event Flow (Zoomed In)
+## Level 2 — Proctoring Violation Flow (Sequence Diagram)
 
 ```mermaid
 sequenceDiagram
     actor Candidate
-    participant SW as Socket.io Server
-    participant ProcSvc as Proctoring Service
-    participant ProcDB as proctoringEvents (MongoDB)
-    participant ViolDB as violationCounters (MongoDB)
-    participant AsmSvc as Assessment Service
-    participant AsmDB as testSessions (MongoDB)
-    participant Redis as Redis Cache
+    participant SW as Socket.io (Proctoring Service)
+    participant PS as Proctoring Service
+    participant ProcDB as proctoring_db
+    participant Redis as Redis
+    participant AMS as Assessment Service
+    participant AssDB as assessment_db
 
-    Candidate->>SW: emit('violation', { type: 'face_not_detected', severity: 'high' })
-    SW->>ProcSvc: handleViolationEvent()
-    ProcSvc->>ProcDB: insert proctoringEvent (+ snapshotUrl if applicable)
-    ProcSvc->>ViolDB: increment totalWarnings
-    ProcSvc->>Redis: update live warning count
+    Candidate->>SW: emit violation { type: face_not_detected, severity: high }
+    SW->>PS: handleViolationEvent()
+    PS->>ProcDB: insert proctoringEvent (+ snapshotUrl if applicable)
+    PS->>ProcDB: increment violationCounters.totalWarnings
+    PS->>Redis: update live warning count for sessionId
 
-    alt warnings < threshold
-        ProcSvc->>SW: emit('warning', { count: N, message: "Face not detected" })
+    alt totalWarnings less than threshold
+        PS->>SW: emit warning to client { count: N, message: Face not detected }
         SW-->>Candidate: Warning shown on UI
-    else warnings >= threshold
-        ProcSvc->>ViolDB: status → barred
-        ProcSvc->>AsmSvc: terminateSession(sessionId)
-        AsmSvc->>AsmDB: status → terminated
-        ProcSvc->>SW: emit('terminated', { reason: "Max violations reached" })
-        SW-->>Candidate: Test terminated
+    else totalWarnings greater than or equal to threshold
+        PS->>ProcDB: update violationCounters.status to barred
+        PS->>AMS: PATCH /api/assessments/:id/status { status: terminated }
+        AMS->>AssDB: update testSession.status to terminated
+        AMS-->>PS: 200 OK
+        PS->>SW: emit terminated { reason: Max violations reached }
+        SW-->>Candidate: Test forcefully terminated
     end
 ```
 
 
+## Data Store Summary
 
-## Data Store Responsibilities
-
-| Store | What Lives There |
-|---|---|
-| **MongoDB** | All persistent data — users, sessions, questions, answers, results, notifications |
-| **Redis** | Live session timer, current question index, warning count, JWT blacklist, Bull queue |
-| **AWS S3** | Camera snapshots (proctoring), candidate resume files |
-| **RabbitMQx** | Async evaluation jobs (backed by Redis, consumed by `evaluation.job.js`) |
+| Store | Owned By | What Lives There |
+|---|---|---|
+| **auth_db** | Auth Service | users, refreshTokens |
+| **user_db** | User Service | profiles (with embedded skill selections) |
+| **question_bank_db** | Question Bank Service | skills, questions (with embedded codingMeta and testCases) |
+| **assessment_db** | Assessment Service | testSessions (with embedded questionRefs) |
+| **proctoring_db** | Proctoring Service | proctoringEvents, violationCounters |
+| **submission_db** | Submission Service | submissions (with embedded answers) |
+| **result_db** | Result Service | results |
+| **notification_db** | Notification Service | notifications |
+| **Redis** | Shared Infra | JWT blacklist, rate limit counters, live session timer, live warning counts |
+| **RabbitMQ** | Shared Infra | submission.created, evaluation.completed event queues |
+| **AWS S3** | Shared Infra | Camera snapshots (Proctoring), resume files (User) |

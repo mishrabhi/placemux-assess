@@ -1,7 +1,7 @@
 # Architecture Diagram
 
-> **Pattern:** Modular Monolith (Microservices-ready)
-> **Stack:** Node.js + Express | MongoDB | Redis | Bull Queue | Socket.io
+> **Pattern:** Microservices
+> **Stack:** Node.js + Express (per service) | MongoDB (per service) | Redis | RabbitMQ | Socket.io
 
 
 
@@ -11,109 +11,118 @@
 flowchart TD
     Client(["🖥️ Client\n(Web App)"])
 
-    subgraph Gateway["API Layer"]
-        AG["NGINX / API Gateway\n(Rate Limiting · CORS · SSL)"]
-        MW["Express Middlewares\n(JWT Auth · Role Guard · Error Handler)"]
+    subgraph PublicLayer["Public Layer"]
+        NGINX["NGINX\n(SSL · CORS · Load Balancer)"]
+        GW["API Gateway — Port 3000\n(JWT Verify · Rate Limit · Route Proxy)"]
     end
 
-    subgraph Monolith["nexus-assess — Node.js + Express App"]
+    subgraph Services["Microservices — Internal Network"]
         direction TB
 
-        subgraph Core["Core Modules"]
-            AM["🔐 Auth Module\nSignup · Login · JWT · Refresh"]
-            UM["👤 User Module\nProfile · Skill Selection"]
-            SKM["🧠 Skills Module\nSkills Catalog"]
-            QM["📋 Questions Module\nMCQ · Technical · Coding"]
+        subgraph AuthCluster["Auth and Identity"]
+            AS["🔐 Auth Service — Port 3001"]
+            US["👤 User Service — Port 3002"]
         end
 
-        subgraph TestLifecycle["Test Lifecycle Modules"]
-            ASM["📝 Assessment Module\nSession Create · Timer · Status"]
-            PM["📷 Proctoring Module\nViolations · Warnings · Auto-bar"]
-            SM["📤 Submission Module\nAnswer Store · Queue Push"]
+        subgraph QuestionCluster["Question Domain"]
+            QBS["📋 Question Bank Service — Port 3003"]
         end
 
-        subgraph Output["Output Modules"]
-            RM["📊 Result Module\nScores · Verdict · Feedback"]
-            NM["🔔 Notification Module\nEmail · Push"]
+        subgraph TestCluster["Test Lifecycle"]
+            AMS["📝 Assessment Service — Port 3004"]
+            PS["📷 Proctoring Service — Port 3005"]
+        end
+
+        subgraph EvalCluster["Evaluation Pipeline"]
+            SS["📤 Submission Service — Port 3006"]
+            RS["📊 Result Service — Port 3007"]
+            NS["🔔 Notification Service — Port 3008"]
         end
     end
 
     subgraph Infra["Infrastructure Layer"]
-        MDB[("🍃 MongoDB\nskill_assessment_db")]
-        RDS[("⚡ Redis\nSession Cache · Rate Limit · Queue")]
-        BQ["🐂 Bull Queue\nEvaluation Jobs"]
-        S3["☁️ AWS S3\nSnapshots · Resumes"]
+        direction LR
+        AuthDB[("auth_db")]
+        UserDB[("user_db")]
+        QBDB[("question_bank_db")]
+        AssDB[("assessment_db")]
+        ProcDB[("proctoring_db")]
+        SubDB[("submission_db")]
+        ResDB[("result_db")]
+        NotifDB[("notification_db")]
+        REDIS[("Redis — Cache and Rate Limit")]
+        MQ["RabbitMQ — Message Queue"]
     end
 
-    subgraph AI["AI Evaluation Layer"]
-        EJ["⚙️ evaluation.job.js\n(Bull Consumer)"]
-        AIE["🤖 AI/ML Evaluation\nEndpoint (External)"]
+    subgraph AILayer["AI Evaluation Layer"]
+        AIJOB["evaluation.consumer.js\nQueue Consumer in Result Service"]
+        AIEP["AI/ML Evaluation Endpoint\nExternal"]
     end
 
-    SOCK["🔌 Socket.io\nReal-time Proctoring Events"]
+    Client -->|"HTTPS"| NGINX
+    Client <-->|"WebSocket"| PS
+    NGINX --> GW
 
-    %% Client to Gateway
-    Client -->|"HTTPS REST"| AG
-    Client <-->|"WebSocket"| SOCK
+    GW -->|"/api/auth/*"| AS
+    GW -->|"/api/users/*"| US
+    GW -->|"/api/skills /api/questions"| QBS
+    GW -->|"/api/assessments/*"| AMS
+    GW -->|"/api/proctoring/*"| PS
+    GW -->|"/api/submissions/*"| SS
+    GW -->|"/api/results/*"| RS
 
-    %% Gateway to App
-    AG --> MW
-    MW --> Core
-    MW --> TestLifecycle
-    MW --> Output
+    AMS -->|"GET questions by skill and level"| QBS
+    PS -->|"PATCH session status terminated"| AMS
+    RS -->|"POST trigger notification"| NS
 
-    %% Socket to Proctoring
-    SOCK --> PM
+    AS --- AuthDB
+    US --- UserDB
+    QBS --- QBDB
+    AMS --- AssDB
+    PS --- ProcDB
+    SS --- SubDB
+    RS --- ResDB
+    NS --- NotifDB
 
-    %% Internal module calls
-    UM --> SKM
-    ASM --> QM
-    PM -->|"terminateSession()"| ASM
-    SM --> BQ
+    AS --- REDIS
+    GW --- REDIS
+    AMS --- REDIS
+    PS --- REDIS
 
-    %% App to Infra
-    Core --> MDB
-    TestLifecycle --> MDB
-    Output --> MDB
-    Core --> RDS
-    ASM --> RDS
-    PM --> S3
-
-    %% Async Evaluation Pipeline
-    BQ --> EJ
-    EJ -->|"HTTP POST"| AIE
-    AIE -->|"scores + verdict"| EJ
-    EJ --> RM
-    RM --> NM
-    NM --> MDB
+    SS -->|"publish: submission.created"| MQ
+    MQ -->|"consume: submission.created"| AIJOB
+    AIJOB -->|"HTTP POST answers and session"| AIEP
+    AIEP -->|"scores, verdict, feedback"| AIJOB
+    AIJOB -->|"save result"| RS
+    RS -->|"publish: evaluation.completed"| MQ
 ```
 
 
 
-## Module Responsibilities
+## Service Responsibilities
 
-| Module | Responsibility |
-|---|---|
-| **Auth** | Signup, login, JWT issue/refresh/revoke, password hashing |
-| **User** | Profile management, experience level, skill selection |
-| **Skills** | Skills catalog CRUD, category management |
-| **Questions** | Question bank — MCQ, technical, coding; difficulty & experience-level mapping |
-| **Assessment** | Test session creation, question assignment, timer, lifecycle status management |
-| **Proctoring** | Camera/mic permission, violation event logging, warning counter, auto-bar trigger |
-| **Submission** | Answer collection, session validation, queue push, idempotency enforcement |
-| **Result** | Store AI-evaluated scores, verdict, feedback; serve to candidate |
-| **Notification** | Email/push dispatch for warnings, submission confirmation, result ready |
+| Service | Port | DB | Responsibility |
+|---|---|---|---|
+| **API Gateway** | 3000 | — | JWT verification, rate limiting, route proxying to all downstream services |
+| **Auth Service** | 3001 | auth_db | Signup, login, JWT issue/refresh/revoke, bcrypt password handling |
+| **User Service** | 3002 | user_db | Candidate profile, experience level, skill selection management |
+| **Question Bank Service** | 3003 | question_bank_db | Skills catalog, question CRUD (MCQ/technical/coding), difficulty and experience-level filtering |
+| **Assessment Service** | 3004 | assessment_db | Test session creation, question assignment, timer state, session lifecycle management |
+| **Proctoring Service** | 3005 | proctoring_db | Camera/mic permissions, Socket.io violation events, warning counter, auto-bar trigger |
+| **Submission Service** | 3006 | submission_db | Answer ingestion, session validation, idempotency enforcement, queue publish |
+| **Result Service** | 3007 | result_db | Consumes evaluation queue, stores AI verdict/scores, serves results to candidate |
+| **Notification Service** | 3008 | notification_db | Email/push dispatch for warnings, submission confirmation, result ready alerts |
 
 
 
 ## Communication Patterns
 
-| Pattern | Used For |
-|---|---|
-| **Synchronous REST** | Login, profile, session create, question fetch, result fetch |
-| **WebSocket (Socket.io)** | Real-time proctoring alerts, live timer sync |
-| **Async Queue (RabbitMQ)** | Submission → AI Evaluation → Result → Notification pipeline |
-| **Internal function calls** | Cross-module calls within the monolith (e.g. `assessmentService.terminateSession()`) |
+| Pattern | Between | Used For |
+|---|---|---|
+| **HTTPS REST** | Client → API Gateway → Services | All user-facing requests |
+| **WebSocket (Socket.io)** | Client ↔ Proctoring Service | Real-time violation alerts, live warnings |
+| **Internal HTTP (Axios)** | Service to Service | Assessment → Question Bank (fetch questions), Proctoring → Assessment (terminate), Result → Notification (trigger) |
+| **Async Queue (RabbitMQ)** | Submission → Result Service via AI | Evaluation pipeline — keeps submission API non-blocking |
 
 
 
@@ -121,8 +130,8 @@ flowchart TD
 
 | Component | Purpose |
 |---|---|
-| **MongoDB** | Primary data store — all collections in `skill_assessment_db` |
-| **Redis** | Active session state (timer, current question), token blacklist, rate limiting, RabbitMQ backing |
-| **RabbitMQ** | Async job queue for AI evaluation pipeline (backed by Redis) |
-| **AWS S3** | Camera snapshots during proctoring, candidate resume uploads |
-| **NGINX** | Reverse proxy, SSL termination, rate limiting at the edge |
+| **MongoDB x8** | One database per service — full data isolation |
+| **Redis** | JWT blacklist (Auth), rate limiting (Gateway), live session timer and warning count (Assessment, Proctoring) |
+| **RabbitMQ** | Async message broker for submission to AI evaluation to result pipeline |
+| **AWS S3** | Camera violation snapshots (Proctoring), candidate resume uploads (User) |
+| **NGINX** | SSL termination, load balancing, reverse proxy to API Gateway |
