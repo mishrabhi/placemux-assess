@@ -1,11 +1,17 @@
-import express from "express";
-import { signup, login, refreshToken, logout } from "../controllers/auth.controller.js";
+import express from 'express';
+import {
+  signup,
+  login,
+  refreshToken,
+  logout,
+} from "../controllers/auth.controller.js";
+import validate  from "../middlewares/validate.middleware.js"
 
 const router = express.Router();
 
-router.post("/signup", signup);
-router.post("/login", login);
-router.post("/refresh", refreshToken);
-router.post("/logout", logout)
+router.post('/signup', validate('signup'),signup);
+router.post('/login', validate('login'), login);
+router.post('/refresh', validate('refresh'),refreshToken);
+router.post('/logout', validate('logout'), logout);
 
 export default router;
