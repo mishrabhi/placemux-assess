@@ -2,8 +2,10 @@ import express from 'express';
 import cors from 'cors';
 import morgan from "morgan";
 import cookieParser from 'cookie-parser';
+import swaggerUi from "swagger-ui-express";
 import authRoutes from "./src/routes/auth.routes.js";
 import { errorHandler } from './src/middlewares/error.middleware.js';
+import swaggerSpec from "./src/docs/swagger.js";
 
 
 const app = express();
@@ -22,6 +24,13 @@ app.get('/health', (req, res) => {
     data: { service: 'auth-service', timestamp: new Date().toISOString() },
   });
 });
+
+//swagger
+app.use(
+    "/api-docs",
+    swaggerUi.serve,
+    swaggerUi.setup(swaggerSpec)
+);
 
 //routes
 app.use("/api/auth", authRoutes)

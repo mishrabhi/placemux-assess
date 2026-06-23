@@ -1,4 +1,6 @@
 import authService from "../services/auth.service.js";
+import asyncHandler from "../utils/asyncHandler.js";
+import ApiResponse from "../utils/apiResponse.js"
 
 //signup
 export const signup = async (req, res) => {
@@ -52,6 +54,15 @@ export const refreshToken = async (req, res) => {
     });
   }
 };
+
+//get authenticated user
+export const getCurrentUser = asyncHandler(async (req, res) => {
+  const user = await authService.getCurrentUser(req.user.userId);
+
+  res
+    .status(200)
+    .json(new ApiResponse(200, user, "Current user fetched successfully"));
+});
 
 //logout
 export const logout = async (req, res) => {

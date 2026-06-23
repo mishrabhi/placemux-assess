@@ -1,0 +1,76 @@
+import swaggerJsDoc from "swagger-jsdoc";
+
+const options = {
+  definition: {
+    openapi: "3.0.0",
+
+    info: {
+      title: "Nexus Assess Auth Service API",
+
+      version: "1.0.0",
+
+      description: "Authentication APIs for Nexus Assess",
+    },
+
+    servers: [
+      {
+        url: "http://localhost:3001",
+        description: "Development Server",
+      },
+    ],
+
+    components: {
+      securitySchemes: {
+        bearerAuth: {
+          type: "http",
+
+          scheme: "bearer",
+
+          bearerFormat: "JWT",
+        },
+      },
+
+      schemas: {
+        SuccessResponse: {
+          type: "object",
+
+          properties: {
+            success: {
+              type: "boolean",
+            },
+
+            message: {
+              type: "string",
+            },
+
+            data: {
+              type: "object",
+            },
+          },
+        },
+
+        ErrorResponse: {
+          type: "object",
+
+          properties: {
+            success: {
+              type: "boolean",
+              example: false,
+            },
+
+            message: {
+              type: "string",
+              example: "Validation failed",
+            },
+          },
+        },
+      },
+    },
+  },
+
+  apis: ["./src/docs/*.js"],
+};
+
+const swaggerSpec = swaggerJsDoc(options);
+
+export default swaggerSpec;
