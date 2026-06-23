@@ -3,13 +3,14 @@ import mongoose from "mongoose";
 const selectedSkillSchema = new mongoose.Schema(
   {
     skillId: {
-      type: mongoose.Schema.Types.ObjectId,
+      type: String,
       required: true,
     },
 
     skillName: {
       type: String,
       required: true,
+      trim: true
     },
 
     selectedAt: {
@@ -25,15 +26,20 @@ const selectedSkillSchema = new mongoose.Schema(
 const profileSchema = new mongoose.Schema(
   {
     userId: {
-      type: mongoose.Schema.Types.ObjectId,
+      type: String,
       required: true,
       unique: true,
       index: true,
     },
 
-    fullName: String,
+    fullName: {
+      type: String,
+    },
 
-    phone: String,
+    phone: {
+      type: String,
+      trim: true
+    },
 
     yearsOfExperience: {
       type: Number,
@@ -43,6 +49,7 @@ const profileSchema = new mongoose.Schema(
     resumeUrl: {
       type: String,
       default: null,
+      trim: true
     },
 
     selectedSkills: [selectedSkillSchema],

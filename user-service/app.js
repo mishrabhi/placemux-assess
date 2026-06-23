@@ -2,9 +2,9 @@ import express from "express";
 import cors from "cors";
 import helmet from "helmet";
 import morgan from "morgan";
-
+import swaggerUi from "swagger-ui-express";
+import swaggerSpec from "./src/docs/swagger.js";
 import userRoutes from "./src/routes/user.route.js";
-
 import {
   errorHandler,
   notFoundHandler,
@@ -32,6 +32,13 @@ app.get("/health", (req, res) => {
     service: "user-service",
   });
 });
+
+//swagger
+app.use(
+    "/api-docs",
+    swaggerUi.serve,
+    swaggerUi.setup(swaggerSpec)
+);
 
 //routes
 app.use("/api/users", userRoutes);

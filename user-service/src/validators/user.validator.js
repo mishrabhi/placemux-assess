@@ -7,7 +7,7 @@ export const updateProfileSchema = Joi.object({
 
   yearsOfExperience: Joi.number().min(0).default(0),
 
-  resumeUrl: Joi.string().allow(null, ""),
+  resumeUrl: Joi.string().uri().allow(null, ""),
 });
 
 export const addSkillsSchema = Joi.object({
@@ -15,9 +15,12 @@ export const addSkillsSchema = Joi.object({
     .items(
       Joi.object({
         skillId: Joi.string().required(),
-        skillName: Joi.string().required(),
-      }),
+
+        skillName: Joi.string()
+          .trim()
+          .required()
+      })
     )
     .min(1)
-    .required(),
+    .required()
 });
