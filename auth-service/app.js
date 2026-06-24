@@ -6,6 +6,7 @@ import swaggerUi from "swagger-ui-express";
 import authRoutes from "./src/routes/auth.routes.js";
 import { errorHandler } from './src/middlewares/error.middleware.js';
 import swaggerSpec from "./src/docs/swagger.js";
+import ApiResponse from "./src/utils/apiResponse.js"
 
 
 const app = express();
@@ -17,12 +18,17 @@ app.use(cookieParser());
 app.use(morgan("dev"));
 
 //Health Check
-app.get('/health', (req, res) => {
-  return successResponse(res, {
-    statusCode: 200,
-    message: 'auth-service is healthy',
-    data: { service: 'auth-service', timestamp: new Date().toISOString() },
-  });
+app.get("/health", (req, res) => {
+    return res.status(200).json(
+        new ApiResponse(
+            200,
+            {
+                service: "auth-service",
+                timestamp: new Date().toISOString()
+            },
+            "auth-service is healthy"
+        )
+    );
 });
 
 //swagger
