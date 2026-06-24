@@ -5,11 +5,11 @@ const options = {
     openapi: "3.0.0",
 
     info: {
-      title: "Nexus Assess Auth Service API",
+      title: "Placemux Assess Auth Service API",
 
       version: "1.0.0",
 
-      description: "Authentication APIs for Nexus Assess",
+      description: "Authentication APIs for Placemux Assess",
     },
 
     servers: [
