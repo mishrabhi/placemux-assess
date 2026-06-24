@@ -9,6 +9,7 @@ import {
   errorHandler,
   notFoundHandler,
 } from "./src/middlewares/error.middleware.js";
+import ApiResponse from "./src/utils/ApiResponse.js"
 
 const app = express();
 
@@ -27,10 +28,16 @@ app.use(morgan("dev"));
 
 //Health check route
 app.get("/health", (req, res) => {
-  res.status(200).json({
-    success: true,
-    service: "user-service",
-  });
+    return res.status(200).json(
+        new ApiResponse(
+            200,
+            {
+                service: "user-service",
+                timestamp: new Date().toISOString()
+            },
+            "user-service is healthy"
+        )
+    );
 });
 
 //swagger
