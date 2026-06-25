@@ -20,16 +20,23 @@
  *           schema:
  *             type: object
  *             required:
+ *               - fullName
  *               - email
  *               - password
  *               - experienceLevel
  *             properties:
+ *               fullName:
+ *                 type: string
+ *                 example: Abhishek Mishra
+ *
  *               email:
  *                 type: string
  *                 example: abhi@gmail.com
+ *
  *               password:
  *                 type: string
  *                 example: password123
+ *
  *               experienceLevel:
  *                 type: string
  *                 enum:
@@ -38,7 +45,6 @@
  *                 example: fresher
  *
  *     responses:
- *
  *       201:
  *         description: User registered successfully
  *
@@ -94,7 +100,6 @@
  *                 example: password123
  *
  *     responses:
- *
  *       200:
  *         description: Login successful
  *
@@ -142,9 +147,9 @@
  *             properties:
  *               refreshToken:
  *                 type: string
+ *                 example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
  *
  *     responses:
- *
  *       200:
  *         description: Token refreshed successfully
  *
@@ -184,9 +189,9 @@
  *             properties:
  *               refreshToken:
  *                 type: string
+ *                 example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
  *
  *     responses:
- *
  *       200:
  *         description: Logout successful
  *
@@ -206,6 +211,8 @@
  *               success: false
  *               message: Internal server error
  */
+
+
 /**
  * @swagger
  * /api/auth/me:
@@ -217,7 +224,6 @@
  *       - bearerAuth: []
  *
  *     responses:
- *
  *       200:
  *         description: User fetched successfully
  *
@@ -231,7 +237,17 @@
  *
  *       404:
  *         description: User not found
+ *         content:
+ *           application/json:
+ *             example:
+ *               success: false
+ *               message: User not found
  *
  *       500:
  *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             example:
+ *               success: false
+ *               message: Internal server error
  */

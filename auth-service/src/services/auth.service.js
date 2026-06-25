@@ -9,7 +9,7 @@ import jwt from "jsonwebtoken";
 class AuthService {
   //signup
   async signup(body) {
-    const { email, password, experienceLevel } = body;
+    const { email,fullName,password, experienceLevel } = body;
     const userExists = await User.findOne({ email });
 
     if (userExists) {
@@ -19,6 +19,7 @@ class AuthService {
     const hashedPassword = await hashPassword(password);
     const user = await User.create({
       email,
+      fullName,
       password: hashedPassword,
       experienceLevel,
     });
