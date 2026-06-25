@@ -14,8 +14,14 @@ const options = {
 
     servers: [
       {
-        url: "http://localhost:3001",
-        description: "Development Server",
+        url:
+          process.env.NODE_ENV === "production"
+            ? "https://placemux-assess-auth-service.onrender.com"
+            : "http://localhost:3001",
+        description:
+          process.env.NODE_ENV === "production"
+            ? "Production Server"
+            : "Development Server",
       },
     ],
 

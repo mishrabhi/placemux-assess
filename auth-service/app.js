@@ -13,9 +13,15 @@ const app = express();
 
 //Global middlewares
 app.use(express.json());
-app.use(cors());
+app.use(
+  cors({
+    origin: "*",
+  })
+);
 app.use(cookieParser());
 app.use(morgan("dev"));
+
+
 
 //Health Check
 app.get("/health", (req, res) => {
