@@ -54,11 +54,6 @@
  *             type: object
  *
  *             properties:
- *
- *               fullName:
- *                 type: string
- *                 example: Abhishek Mishra
- *
  *               phone:
  *                 type: string
  *                 example: 9876543210

@@ -2,7 +2,7 @@ import Profile from "../models/profile.model.js";
 import ApiError from "../utils/ApiError.js";
 
 class UserService {
-//Get User Profile
+  //Get User Profile
   async getProfile(userId) {
     let profile = await Profile.findOne({
       userId,
@@ -17,13 +17,17 @@ class UserService {
     return profile;
   }
 
-// Update User Profile
+  // Update User Profile
   async updateProfile(userId, payload) {
+    const { phone, yearsOfExperience, resumeUrl } = payload;
+
     const profile = await Profile.findOneAndUpdate(
+      { userId },
       {
-        userId,
+        phone,
+        yearsOfExperience,
+        resumeUrl,
       },
-      payload,
       {
         new: true,
         upsert: true,
@@ -33,7 +37,7 @@ class UserService {
     return profile;
   }
 
-// Add User Skills
+  // Add User Skills
   async addSkills(userId, skills) {
     const profile = await Profile.findOne({
       userId,

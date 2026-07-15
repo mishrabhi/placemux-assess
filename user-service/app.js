@@ -15,7 +15,11 @@ const app = express();
 
 //Global middlewarews
 app.use(helmet());
-app.use(cors());
+app.use(
+  cors({
+    origin: "*",
+  })
+);
 
 app.use(express.json());
 app.use(

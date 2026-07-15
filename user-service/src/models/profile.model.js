@@ -31,11 +31,6 @@ const profileSchema = new mongoose.Schema(
       unique: true,
       index: true,
     },
-
-    fullName: {
-      type: String,
-    },
-
     phone: {
       type: String,
       trim: true

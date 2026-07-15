@@ -2,8 +2,16 @@ import mongoose from "mongoose";
 
 const testCaseSchema = new mongoose.Schema(
   {
-    input: String,
-    expectedOutput: String,
+    input: {
+      type: String,
+      required: true,
+    },
+
+    expectedOutput: {
+      type: String,
+      required: true,
+    },
+
     isHidden: {
       type: Boolean,
       default: true,
@@ -16,9 +24,16 @@ const testCaseSchema = new mongoose.Schema(
 
 const codingMetaSchema = new mongoose.Schema(
   {
-    allowedLanguages: [String],
+    allowedLanguages: [
+      {
+        type: String,
+      },
+    ],
 
-    starterCode: String,
+    starterCode: {
+      type: String,
+      default: "",
+    },
 
     testCases: [testCaseSchema],
   },
@@ -30,8 +45,7 @@ const codingMetaSchema = new mongoose.Schema(
 const questionSchema = new mongoose.Schema(
   {
     skillId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Skill",
+      type: String,
       required: true,
       index: true,
     },
@@ -57,9 +71,14 @@ const questionSchema = new mongoose.Schema(
     questionText: {
       type: String,
       required: true,
+      trim: true,
     },
 
-    options: [String],
+    options: [
+      {
+        type: String,
+      },
+    ],
 
     correctAnswer: {
       type: String,
@@ -67,14 +86,80 @@ const questionSchema = new mongoose.Schema(
       select: false,
     },
 
+    explanation: {
+      type: String,
+      default: "",
+    },
+
+    tags: [
+      {
+        type: String,
+        trim: true,
+      },
+    ],
+
     maxScore: {
       type: Number,
       default: 10,
     },
 
-    timeLimitSeconds: Number,
+    timeLimitSeconds: {
+      type: Number,
+      default: 60,
+    },
 
     codingMeta: codingMetaSchema,
+
+    source: {
+      type: String,
+      enum: ["MANUAL", "AI"],
+      default: "MANUAL",
+      index: true,
+    },
+
+    generatedBy: {
+      type: String,
+      default: null,
+    },
+
+    modelVersion: {
+      type: String,
+      default: null,
+    },
+
+    confidence: {
+      type: Number,
+      min: 0,
+      max: 1,
+      default: null,
+    },
+
+    approvalStatus: {
+      type: String,
+      enum: ["pending", "approved", "rejected"],
+      default: "approved",
+      index: true,
+    },
+
+    approvedBy: {
+      type: String,
+      default: null,
+    },
+
+    approvedAt: {
+      type: Date,
+      default: null,
+    },
+
+    importedAt: {
+      type: Date,
+      default: null,
+    },
+
+    isActive: {
+      type: Boolean,
+      default: true,
+    },
   },
   {
     timestamps: true,
@@ -83,9 +168,17 @@ const questionSchema = new mongoose.Schema(
 
 questionSchema.index({
   skillId: 1,
-  type: 1,
   difficulty: 1,
-  experienceLevel: 1,
+  type: 1,
+});
+
+questionSchema.index({
+  approvalStatus: 1,
+  source: 1,
+});
+
+questionSchema.index({
+  questionText: "text",
 });
 
 export default mongoose.model("Question", questionSchema);

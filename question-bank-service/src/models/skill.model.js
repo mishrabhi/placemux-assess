@@ -1,25 +1,25 @@
-import mongoose from 'mongoose';
+import mongoose from "mongoose";
 
-const skillSchema = new mongoose.Schema({
+const skillSchema = new mongoose.Schema(
+  {
     name: {
-        type: String,
-        required: true,
-        unique: true,
-        trim: true
+      type: String,
+      required: true,
+      unique: true,
+      trim: true,
     },
     category: {
-        type: String,
-        required: true
+      type: String,
+      required: true,
     },
     isActive: {
-        type: Boolean,
-        default: true
+      type: Boolean,
+      default: true,
     },
-},{
-    timestamps: true
-})
-
-export default mongoose.model(
-    "Skill",
-    skillSchema
+  },
+  {
+    timestamps: true,
+  },
 );
+
+export default mongoose.model("Skill", skillSchema);
