@@ -7,16 +7,21 @@ const options = {
     info: {
       title: "Placemux Question Bank Service API",
       version: "1.0.0",
-      description: "Question Bank APIs for Placemux Assessment Platform",
+      description:
+        "Question Bank Service APIs for Placemux Assessment Platform",
     },
 
     servers: [
       {
-        url: process.env.API_BASE_URL || "http://localhost:3003",
+        url:
+          process.env.NODE_ENV === "production"
+            ? process.env.API_BASE_URL
+            : "http://localhost:3003",
 
-        description: process.env.API_BASE_URL
-          ? "Production Server"
-          : "Development Server",
+        description:
+          process.env.NODE_ENV === "production"
+            ? "Production Server"
+            : "Development Server",
       },
     ],
 
@@ -36,10 +41,12 @@ const options = {
           properties: {
             success: {
               type: "boolean",
+              example: true,
             },
 
             statusCode: {
               type: "number",
+              example: 200,
             },
 
             message: {
@@ -63,7 +70,6 @@ const options = {
 
             message: {
               type: "string",
-              example: "Validation failed",
             },
           },
         },
@@ -77,7 +83,9 @@ const options = {
     ],
   },
 
-  apis: ["./src/docs/*.js"],
+  apis: [
+    "./src/docs/*.swagger.js",
+  ],
 };
 
 const swaggerSpec = swaggerJsDoc(options);

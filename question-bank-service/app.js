@@ -2,7 +2,9 @@ import express from "express";
 import cors from "cors";
 import helmet from "helmet";
 import morgan from "morgan";
-
+import swaggerUi from "swagger-ui-express";
+import swaggerSpec from "./src/docs/swagger.js";
+import successResponse from "./src/utils/ApiResponse.js"
 import skillRoutes from "./src/routes/skill.routes.js";
 import questionRoutes from "./src/routes/question.routes.js";
 
@@ -24,11 +26,35 @@ app.use(
 );
 app.use(morgan("dev"));
 
+//swagger api-doc
+app.use(
+  "/api-docs",
+  swaggerUi.serve,
+  swaggerUi.setup(swaggerSpec)
+);
+
+//server check
+app.get("/", (req, res) => {
+  return res.status(200).json({
+    success: true,
+    service: "Question Bank Service",
+    message: "Question Bank Service is running successfully 🚀",
+    version: "2.0.0",
+    docs: "/api-docs",
+    health: "/health",
+    timestamp: new Date().toISOString(),
+  });
+});
+
 //health check route
 app.get("/health", (req, res) => {
-  res.status(200).json({
+  return res.status(200).json({
     success: true,
-    service: "question-bank-service",
+    message: "Question Bank Service is healthy",
+    data: {
+      service: "question-bank-service",
+      timestamp: new Date().toISOString(),
+    },
   });
 });
 
