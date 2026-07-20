@@ -6,6 +6,7 @@ import swaggerUi from "swagger-ui-express";
 import swaggerSpec from "./src/docs/swagger.js";
 import successResponse from "./src/utils/ApiResponse.js"
 import skillRoutes from "./src/routes/skill.routes.js";
+import aiQuestionRoutes from "./src/routes/aiQuestion.routes.js";
 
 import {
   errorHandler,

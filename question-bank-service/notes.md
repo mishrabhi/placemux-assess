@@ -191,3 +191,13 @@ Easy
 Fresher
 ```
 doesn't hit AI again.
+
+
+### What this service really doing:
+Recommend one final adjustment before we continue coding:
+
+- Assessment Service should own candidate lookup and orchestration.
+- Question Bank Service should stay focused on generating questions from a supplied assessment specification.
+- The frontend never sends skills or experience directly; it only requests that an assessment be started.
+- The Assessment Service derives the candidate's skills and experience from the User Service, decides the assessment blueprint (counts, distribution, etc.), and sends that blueprint to the Question Bank Service.
+- The Question Bank Service validates the blueprint, calls the AI model, normalizes the AI response, and returns questions.
