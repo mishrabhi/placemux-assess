@@ -6,7 +6,6 @@ import swaggerUi from "swagger-ui-express";
 import swaggerSpec from "./src/docs/swagger.js";
 import successResponse from "./src/utils/ApiResponse.js"
 import skillRoutes from "./src/routes/skill.routes.js";
-import questionRoutes from "./src/routes/question.routes.js";
 
 import {
   errorHandler,
@@ -35,13 +34,16 @@ app.use(
 
 //server check
 app.get("/", (req, res) => {
-  return res.status(200).json({
+  res.status(200).json({
     success: true,
     service: "Question Bank Service",
-    message: "Question Bank Service is running successfully 🚀",
     version: "2.0.0",
-    docs: "/api-docs",
-    health: "/health",
+    architecture: "AI Powered",
+    endpoints: {
+      skills: "/api/skills",
+      docs: "/api-docs",
+      health: "/health",
+    },
     timestamp: new Date().toISOString(),
   });
 });
@@ -60,7 +62,6 @@ app.get("/health", (req, res) => {
 
 //routes
 app.use("/api/skills", skillRoutes);
-app.use("/api/questions", questionRoutes);
 
 //Error handlers
 app.use(notFoundHandler);
