@@ -1,0 +1,27 @@
+{
+  "name": "ai-mock-service",
+  "version": "1.0.0",
+  "description": "Mock AI Service for Question Generation",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "dev": "nodemon server.js",
+    "start": "node server.js"
+  },
+  "keywords": [
+    "placemux",
+    "ai",
+    "mock",
+    "question-generator"
+  ],
+  "author": "Abhishek Mishra",
+  "license": "ISC",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.5.0",
+    "express": "^4.19.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.4"
+  }
+}
