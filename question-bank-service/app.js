@@ -4,7 +4,7 @@ import helmet from "helmet";
 import morgan from "morgan";
 import swaggerUi from "swagger-ui-express";
 import swaggerSpec from "./src/docs/swagger.js";
-import successResponse from "./src/utils/ApiResponse.js"
+import successResponse from "./src/utils/ApiResponse.js";
 import skillRoutes from "./src/routes/skill.routes.js";
 import aiQuestionRoutes from "./src/routes/aiQuestion.routes.js";
 
@@ -27,11 +27,7 @@ app.use(
 app.use(morgan("dev"));
 
 //swagger api-doc
-app.use(
-  "/api-docs",
-  swaggerUi.serve,
-  swaggerUi.setup(swaggerSpec)
-);
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 //server check
 app.get("/", (req, res) => {
@@ -63,6 +59,7 @@ app.get("/health", (req, res) => {
 
 //routes
 app.use("/api/skills", skillRoutes);
+app.use("/api/questions", aiQuestionRoutes);
 
 //Error handlers
 app.use(notFoundHandler);

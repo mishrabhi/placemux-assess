@@ -4,6 +4,8 @@ import connectDB from "./src/config/db.js";
 
 import { env } from "./src/config/env.js";
 
+console.log("AI_BASE_URL =", process.env.AI_BASE_URL);
+
 const startServer = async () => {
   try {
     await connectDB();

@@ -19,7 +19,14 @@ class AIMLClient {
 
       return response.data;
     } catch (error) {
-      console.error("AI Service Error:", error.message);
+      if (error.response) {
+        console.log("Status:", error.response.status);
+        console.log("Data:", error.response.data);
+      }
+
+      if (error.request) {
+        console.log("No response received from AI service.");
+      }
 
       throw new ApiError(
         503,
