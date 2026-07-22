@@ -72,8 +72,5 @@ const questionSnapshotSchema = new mongoose.Schema(
   },
 );
 
-questionSnapshotSchema.index({
-  assessmentId: 1,
-});
 
 export default mongoose.model("QuestionSnapshot", questionSnapshotSchema);

@@ -1,11 +1,25 @@
 import express from "express";
 import cors from "cors";
+import assessmentRoutes from "./src/routes/assessment.routes.js";
+import swaggerUi from "swagger-ui-express";
+import swaggerSpec from "./src/docs/swagger.js";
+import errorHandler from "./src/middlewares/error.middleware.js";
+import notFound from "./src/middlewares/notFound.middleware.js";
 
 const app = express();
 
 app.use(cors());
 
 app.use(express.json());
+
+/**
+ * Swagger Route
+ */
+app.use(
+  "/api-docs",
+  swaggerUi.serve,
+  swaggerUi.setup(swaggerSpec),
+);
 
 /**
  * Root Route
@@ -37,5 +51,11 @@ app.get("/health", (req, res) => {
     },
   });
 });
+
+app.use("/api/assessments", assessmentRoutes);
+
+//Global Error handling
+app.use(notFound);
+app.use(errorHandler);
 
 export default app;

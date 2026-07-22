@@ -5,7 +5,6 @@ const candidateAnswerSchema = new mongoose.Schema(
     assessmentId: {
       type: String,
       required: true,
-      index: true,
     },
 
     questionId: {
@@ -38,10 +37,6 @@ const candidateAnswerSchema = new mongoose.Schema(
   },
 );
 
-candidateAnswerSchema.index({
-  assessmentId: 1,
-  questionId: 1,
-});
 
 candidateAnswerSchema.index(
   {
@@ -53,7 +48,4 @@ candidateAnswerSchema.index(
   },
 );
 
-export default mongoose.model(
-  "CandidateAnswer",
-  candidateAnswerSchema,
-);
+export default mongoose.model("CandidateAnswer", candidateAnswerSchema);

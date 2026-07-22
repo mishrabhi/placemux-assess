@@ -24,12 +24,7 @@ const assessmentSchema = new mongoose.Schema(
 
     status: {
       type: String,
-      enum: [
-        "pending",
-        "in_progress",
-        "submitted",
-        "evaluated",
-      ],
+      enum: ["pending", "in_progress", "submitted", "evaluated"],
       default: "in_progress",
       index: true,
     },
@@ -69,9 +64,5 @@ const assessmentSchema = new mongoose.Schema(
   },
 );
 
-assessmentSchema.index({
-  candidateId: 1,
-  status: 1,
-});
 
 export default mongoose.model("Assessment", assessmentSchema);
