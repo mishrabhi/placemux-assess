@@ -213,6 +213,35 @@ class AssessmentService {
       createdAt: -1,
     });
   }
+
+  /**
+     * Get Internal Assessment
+     */
+  async getInternalAssessment(assessmentId) {
+    const assessment = await Assessment.findOne({
+      assessmentId,
+    });
+
+    if (!assessment) {
+      throw new ApiError(404, "Assessment not found.");
+    }
+
+    const questions = await QuestionSnapshot.find({
+      assessmentId,
+    });
+
+    const answers = await CandidateAnswer.find({
+      assessmentId,
+    });
+
+    return {
+      assessment,
+
+      questions,
+
+      answers,
+    };
+  }
 }
 
 export default new AssessmentService();

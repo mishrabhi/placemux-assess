@@ -48,4 +48,13 @@ router.post(
  */
 router.get("/history", auth, getHistory);
 
+/**
+ * Get Internal Assessments
+ */
+router.get(
+  "/internal/:assessmentId",
+  auth,
+  getInternalAssessment,
+);
+
 export default router;

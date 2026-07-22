@@ -71,3 +71,18 @@ export const getHistory = asyncHandler(async (req, res) => {
       new ApiResponse(200, history, "Assessment history fetched successfully."),
     );
 });
+
+//get Internal Assessment
+export const getInternalAssessment = asyncHandler(async (req, res) => {
+  const assessment = await AssessmentService.getInternalAssessment(
+    req.params.assessmentId,
+  );
+
+  return res.status(200).json(
+    new ApiResponse(
+      200,
+      assessment,
+      "Internal assessment fetched successfully.",
+    ),
+  );
+});
