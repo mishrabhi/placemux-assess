@@ -1,6 +1,7 @@
 import Skill from "../models/skill.model.js";
 import AIMLClient from "../integrations/aiml.client.js";
 import ApiError from "../utils/ApiError.js";
+import {v4 as uuid} from "uuid";
 
 //AI questions generation
 class AIQuestionService {
@@ -69,6 +70,8 @@ class AIQuestionService {
 
   normalizeQuestions(questions) {
     return questions.map((question) => ({
+       questionId: `QUE-${uuid().replace(/-/g, "").substring(0, 10).toUpperCase()}`,
+
       type: question.type,
 
       difficulty: question.difficulty,
