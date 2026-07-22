@@ -13,24 +13,14 @@ const mcqTemplates = [
 
   {
     questionText: "Which method starts an Express server?",
-    options: [
-      "app.listen()",
-      "app.start()",
-      "server.run()",
-      "express.start()",
-    ],
+    options: ["app.listen()", "app.start()", "server.run()", "express.start()"],
     correctAnswer: "app.listen()",
     explanation: "app.listen() starts the HTTP server.",
   },
 
   {
     questionText: "Which keyword declares a constant in JavaScript?",
-    options: [
-      "const",
-      "var",
-      "let",
-      "static",
-    ],
+    options: ["const", "var", "let", "static"],
     correctAnswer: "const",
     explanation: "const creates block scoped constants.",
   },
@@ -41,34 +31,27 @@ const technicalTemplates = [
     questionText: "Explain middleware in Express.js.",
     correctAnswer:
       "Middleware functions execute during the request-response lifecycle.",
-    explanation:
-      "They can modify request, response or terminate the request.",
+    explanation: "They can modify request, response or terminate the request.",
   },
 
   {
     questionText: "Explain Event Loop in Node.js.",
-    correctAnswer:
-      "Event Loop allows Node.js to perform non-blocking I/O.",
-    explanation:
-      "It continuously checks the callback queue.",
+    correctAnswer: "Event Loop allows Node.js to perform non-blocking I/O.",
+    explanation: "It continuously checks the callback queue.",
   },
 
   {
     questionText: "Difference between process.nextTick() and setImmediate().",
-    correctAnswer:
-      "nextTick executes before the next event loop phase.",
-    explanation:
-      "setImmediate executes during the check phase.",
+    correctAnswer: "nextTick executes before the next event loop phase.",
+    explanation: "setImmediate executes during the check phase.",
   },
 ];
 
 const codingTemplates = [
   {
-    questionText:
-      "Reverse a string without using built-in reverse().",
+    questionText: "Reverse a string without using built-in reverse().",
 
-    starterCode:
-`function reverseString(str){
+    starterCode: `function reverseString(str){
 
 }`,
 
@@ -85,11 +68,9 @@ const codingTemplates = [
   },
 
   {
-    questionText:
-      "Check whether a string is palindrome.",
+    questionText: "Check whether a string is palindrome.",
 
-    starterCode:
-`function isPalindrome(str){
+    starterCode: `function isPalindrome(str){
 
 }`,
 
@@ -116,11 +97,9 @@ export function generateMockQuestions({
   difficulty,
   distribution,
 }) {
-
   const questions = [];
 
   const createQuestion = (type, template) => {
-
     const skill = randomItem(skills);
 
     return {
@@ -144,11 +123,7 @@ export function generateMockQuestions({
       codingMeta:
         type === "coding"
           ? {
-              allowedLanguages: [
-                "javascript",
-                "python",
-                "java",
-              ],
+              allowedLanguages: ["javascript", "python", "java"],
 
               starterCode: template.starterCode,
 
@@ -156,47 +131,28 @@ export function generateMockQuestions({
             }
           : null,
 
-      maxScore:
-        type === "coding" ? 30 : 10,
+      maxScore: type === "coding" ? 30 : 10,
 
-      timeLimitSeconds:
-        type === "coding" ? 900 : 60,
+      timeLimitSeconds: type === "coding" ? 900 : 60,
 
       generatedBy: "Placemux Mock AI",
 
       modelVersion: "v1.0",
 
-      confidence:
-        Number((0.85 + Math.random() * 0.14).toFixed(2)),
+      confidence: Number((0.85 + Math.random() * 0.14).toFixed(2)),
     };
-
   };
 
   for (let i = 0; i < distribution.mcq; i++) {
-    questions.push(
-      createQuestion(
-        "mcq",
-        randomItem(mcqTemplates)
-      )
-    );
+    questions.push(createQuestion("mcq", randomItem(mcqTemplates)));
   }
 
   for (let i = 0; i < distribution.technical; i++) {
-    questions.push(
-      createQuestion(
-        "technical",
-        randomItem(technicalTemplates)
-      )
-    );
+    questions.push(createQuestion("technical", randomItem(technicalTemplates)));
   }
 
   for (let i = 0; i < distribution.coding; i++) {
-    questions.push(
-      createQuestion(
-        "coding",
-        randomItem(codingTemplates)
-      )
-    );
+    questions.push(createQuestion("coding", randomItem(codingTemplates)));
   }
 
   return questions;
