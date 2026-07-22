@@ -1,5 +1,6 @@
 import AIService from "../services/ai.service.js";
 
+//generate Questions
 export const generateQuestions = async (req, res) => {
   try {
     const result = await AIService.generateQuestions(req.body);
@@ -14,6 +15,27 @@ export const generateQuestions = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: error.message || "Failed to generate questions.",
+    });
+  }
+};
+
+//Evaluate Assessment
+export const evaluateAssessment = async (req, res) => {
+  try {
+    const result = await AIService.evaluateAssessment(req.body);
+
+    return res.status(200).json({
+      success: true,
+
+      message: "Assessment evaluated successfully.",
+
+      data: result,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+
+      message: error.message,
     });
   }
 };

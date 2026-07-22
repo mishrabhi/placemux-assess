@@ -1,5 +1,5 @@
 import express from "express";
-import { generateQuestions } from "../controllers/ai.controller.js";
+import { generateQuestions, evaluateAssesssment } from "../controllers/ai.controller.js";
 
 const router = express.Router();
 
@@ -7,5 +7,13 @@ const router = express.Router();
  * Generate Questions
  */
 router.post("/generate", generateQuestions);
+
+/**
+ * Evaluate Assessment
+ */
+router.post(
+    "/evaluate",
+    evaluateAssessment
+);
 
 export default router;
