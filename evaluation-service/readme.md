@@ -231,24 +231,6 @@ MongoDB
 ```
 
 
-## Environment Variables
-
-```env
-PORT=3005
-
-NODE_ENV=development
-
-MONGO_URI=<mongodb_connection_string>
-
-JWT_ACCESS_SECRET=<jwt_secret>
-
-ASSESSMENT_SERVICE_URL=http://localhost:3004
-
-AI_SERVICE_URL=http://localhost:4000
-
-REQUEST_TIMEOUT=30000
-```
-
 
 ## Running Locally
 
