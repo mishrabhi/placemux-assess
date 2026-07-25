@@ -30,6 +30,7 @@ export const saveAnswer = asyncHandler(async (req, res) => {
   const answer = await AssessmentService.saveAnswer(
     req.params.assessmentId,
     req.body,
+    req.user,
   );
 
   return res
@@ -41,6 +42,7 @@ export const saveAnswer = asyncHandler(async (req, res) => {
 export const getAssessment = asyncHandler(async (req, res) => {
   const assessment = await AssessmentService.getAssessment(
     req.params.assessmentId,
+    req.user,
   );
 
   return res
@@ -52,6 +54,7 @@ export const getAssessment = asyncHandler(async (req, res) => {
 export const submitAssessment = asyncHandler(async (req, res) => {
   const assessment = await AssessmentService.submitAssessment(
     req.params.assessmentId,
+    req.user,
   );
 
   return res
@@ -76,6 +79,7 @@ export const getHistory = asyncHandler(async (req, res) => {
 export const getInternalAssessment = asyncHandler(async (req, res) => {
   const assessment = await AssessmentService.getInternalAssessment(
     req.params.assessmentId,
+    req.user,
   );
 
   return res.status(200).json(

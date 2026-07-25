@@ -40,7 +40,7 @@ class AssessmentService {
      * Build Assessment Blueprint
      */
     const blueprint = {
-      assessmentId: null,
+      // assessmentId: null,
 
       candidateId,
 
@@ -78,7 +78,7 @@ class AssessmentService {
     /**
      * Save Assessment ID into Blueprint
      */
-    blueprint.assessmentId = assessment.assessmentId;
+    // blueprint.assessmentId = assessment.assessmentId;
 
     /**
      * Save Question Snapshot
@@ -115,14 +115,27 @@ class AssessmentService {
   /**
    * Save Answer
    */
-  async saveAnswer(assessmentId, payload) {
+  async saveAnswer(assessmentId, payload, user) {
     const assessment = await Assessment.findOne({
       assessmentId,
       status: "in_progress",
     });
 
     if (!assessment) {
-      throw new ApiError(404, "Assessment not found.");
+      throw new ApiError(404, "Assessment not found or not in progress.");
+    }
+
+    if (user.role !== "admin" && assessment.candidateId !== user.userId) {
+      throw new ApiError(403, "Forbidden.");
+    }
+
+    const question = await QuestionSnapshot.findOne({
+      assessmentId,
+      questionId: payload.questionId,
+    });
+
+    if (!question) {
+      throw new ApiError(404, "Question not found for this assessment.");
     }
 
     const answer = await CandidateAnswer.findOneAndUpdate(
@@ -153,13 +166,17 @@ class AssessmentService {
   /**
    * Save Answer
    */
-  async getAssessment(assessmentId) {
+  async getAssessment(assessmentId, user) {
     const assessment = await Assessment.findOne({
       assessmentId,
     });
 
     if (!assessment) {
       throw new ApiError(404, "Assessment not found.");
+    }
+
+    if (user.role !== "admin" && assessment.candidateId !== user.userId) {
+      throw new ApiError(403, "Forbidden.");
     }
 
     const questions = await QuestionSnapshot.find({
@@ -181,13 +198,17 @@ class AssessmentService {
   /**
    * Submit Assessment
    */
-  async submitAssessment(assessmentId) {
+  async submitAssessment(assessmentId, user) {
     const assessment = await Assessment.findOne({
       assessmentId,
     });
 
     if (!assessment) {
       throw new ApiError(404, "Assessment not found.");
+    }
+
+    if (user.role !== "admin" && assessment.candidateId !== user.userId) {
+      throw new ApiError(403, "Forbidden.");
     }
 
     if (assessment.status !== "in_progress") {
@@ -217,7 +238,11 @@ class AssessmentService {
   /**
      * Get Internal Assessment
      */
-  async getInternalAssessment(assessmentId) {
+  async getInternalAssessment(assessmentId, user) {
+    if (user.role !== "admin") {
+      throw new ApiError(403, "Forbidden.");
+    }
+
     const assessment = await Assessment.findOne({
       assessmentId,
     });
