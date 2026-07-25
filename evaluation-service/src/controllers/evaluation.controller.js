@@ -7,86 +7,63 @@ import ApiResponse from "../utils/ApiResponse.js";
  * Evaluate Assessment
  */
 export const evaluateAssessment = asyncHandler(async (req, res) => {
+  const accessToken = req.headers.authorization;
 
-    const accessToken =
-        req.headers.authorization;
+  const { assessmentId } = req.body;
 
-    const { assessmentId } = req.body;
+  const result = await EvaluationService.evaluateAssessment(
+    accessToken,
+    assessmentId,
+    req.user,
+  );
 
-    const result =
-        await EvaluationService.evaluateAssessment(
-            accessToken,
-            assessmentId
-        );
+  return res.status(201).json(
+    new ApiResponse(
+      201,
 
-    return res.status(201).json(
+      result,
 
-        new ApiResponse(
-
-            201,
-
-            result,
-
-            "Assessment evaluated successfully."
-
-        )
-
-    );
-
+      "Assessment evaluated successfully.",
+    ),
+  );
 });
 
 /**
  * Get Evaluation Report
  */
 export const getEvaluationReport = asyncHandler(async (req, res) => {
+  const report = await EvaluationService.getEvaluationReport(
+    req.params.assessmentId,
+    req.user,
+  );
 
-    const report =
-        await EvaluationService.getEvaluationReport(
+  return res.status(200).json(
+    new ApiResponse(
+      200,
 
-            req.params.assessmentId
+      report,
 
-        );
-
-    return res.status(200).json(
-
-        new ApiResponse(
-
-            200,
-
-            report,
-
-            "Evaluation report fetched successfully."
-
-        )
-
-    );
-
+      "Evaluation report fetched successfully.",
+    ),
+  );
 });
 
 /**
  * Get Candidate Result
  */
 export const getCandidateResult = asyncHandler(async (req, res) => {
+  const result = await EvaluationService.getCandidateResult(
+    req.params.assessmentId,
+    req.user,
+  );
 
-    const result =
-        await EvaluationService.getCandidateResult(
+  return res.status(200).json(
+    new ApiResponse(
+      200,
 
-            req.params.assessmentId
+      result,
 
-        );
-
-    return res.status(200).json(
-
-        new ApiResponse(
-
-            200,
-
-            result,
-
-            "Evaluation result fetched successfully."
-
-        )
-
-    );
-
+      "Evaluation result fetched successfully.",
+    ),
+  );
 });

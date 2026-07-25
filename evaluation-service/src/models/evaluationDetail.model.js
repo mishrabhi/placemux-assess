@@ -5,13 +5,13 @@ const evaluationDetailSchema = new mongoose.Schema(
     evaluationId: {
       type: String,
       required: true,
-      index: true,
+      // index: true,
     },
 
     assessmentId: {
       type: String,
       required: true,
-      index: true,
+      // index: true,
     },
 
     questionId: {

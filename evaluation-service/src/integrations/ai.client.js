@@ -2,13 +2,9 @@ import axios from "axios";
 import ApiError from "../utils/ApiError.js";
 
 class AIClient {
-
   async evaluateAssessment(accessToken, payload) {
-
     try {
-
       const response = await axios.post(
-
         `${process.env.AI_SERVICE_URL}/evaluate`,
 
         payload,
@@ -20,28 +16,19 @@ class AIClient {
             Authorization: accessToken,
             "Content-Type": "application/json",
           },
-        }
-
+        },
       );
 
-      return response.data.data;
-
+      return response.data.data ?? response.data;
     } catch (error) {
-
-      console.error(
-        "AI Service Error:",
-        error.message
-      );
+      console.error("AI Service Error:", error.message);
 
       throw new ApiError(
         503,
-        "Unable to communicate with AI Evaluation Service."
+        "Unable to communicate with AI Evaluation Service.",
       );
-
     }
-
   }
-
 }
 
 export default new AIClient();

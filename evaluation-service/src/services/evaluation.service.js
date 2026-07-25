@@ -7,7 +7,11 @@ import AIClient from "../integrations/ai.client.js";
 import ApiError from "../utils/ApiError.js";
 
 class EvaluationService {
-  async evaluateAssessment(accessToken, assessmentId) {
+  async evaluateAssessment(accessToken, assessmentId, user) {
+    if (user.role !== "admin") {
+      throw new ApiError(403, "Forbidden.");
+    }
+
     /**
      * Prevent duplicate evaluation
      */
@@ -26,6 +30,10 @@ class EvaluationService {
       assessmentId,
       accessToken,
     );
+
+    if (user.role !== "admin" && assessmentData.assessment.candidateId !== user.userId) {
+      throw new ApiError(403, "Forbidden.");
+    }
 
     /**
      * Build AI Payload
@@ -108,13 +116,17 @@ class EvaluationService {
   /**
    * Get Evaluation Report
    */
-  async getEvaluationReport(assessmentId) {
+  async getEvaluationReport(assessmentId, user) {
     const evaluation = await Evaluation.findOne({
       assessmentId,
     });
 
     if (!evaluation) {
       throw new ApiError(404, "Evaluation not found.");
+    }
+
+    if (user.role !== "admin" && evaluation.candidateId !== user.userId) {
+      throw new ApiError(403, "Forbidden.");
     }
 
     const details = await EvaluationDetail.find({
@@ -131,13 +143,17 @@ class EvaluationService {
   /**
    * Get Candidate Result
    */
-  async getCandidateResult(assessmentId) {
+  async getCandidateResult(assessmentId, user) {
     const evaluation = await Evaluation.findOne({
       assessmentId,
     });
 
     if (!evaluation) {
       throw new ApiError(404, "Evaluation not found.");
+    }
+
+    if (user.role !== "admin" && evaluation.candidateId !== user.userId) {
+      throw new ApiError(403, "Forbidden.");
     }
 
     return {
