@@ -201,3 +201,6 @@ Recommend one final adjustment before we continue coding:
 - The frontend never sends skills or experience directly; it only requests that an assessment be started.
 - The Assessment Service derives the candidate's skills and experience from the User Service, decides the assessment blueprint (counts, distribution, etc.), and sends that blueprint to the Question Bank Service.
 - The Question Bank Service validates the blueprint, calls the AI model, normalizes the AI response, and returns questions.
+
+
+//Skill Id needs to be unique(taking random)

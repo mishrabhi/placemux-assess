@@ -17,7 +17,7 @@ class AIMLClient {
         },
       );
 
-      return response.data;
+      return response.data.data ?? response.data;
     } catch (error) {
       if (error.response) {
         console.log("Status:", error.response.status);

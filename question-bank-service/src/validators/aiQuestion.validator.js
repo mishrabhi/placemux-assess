@@ -5,26 +5,21 @@ const skillSchema = Joi.object({
 
   skillName: Joi.string().trim().required(),
 
-  weight: Joi.number().min(1).max(100).required(),
+  selectedAt: Joi.date().optional(),
+
+  weight: Joi.number().min(1).max(100).optional(),
 });
 
 export const generateQuestionsSchema = Joi.object({
-  assessmentId: Joi.string().trim().required(),
+  // assessmentId: Joi.string().trim().required(),
 
   candidateId: Joi.string().trim().required(),
 
-  experienceLevel: Joi.string()
-    .valid("fresher", "experienced")
-    .required(),
+  experienceLevel: Joi.string().valid("fresher", "experienced").required(),
 
-  difficulty: Joi.string()
-    .valid("easy", "medium", "hard")
-    .required(),
+  difficulty: Joi.string().valid("easy", "medium", "hard").required(),
 
-  skills: Joi.array()
-    .items(skillSchema)
-    .min(1)
-    .required(),
+  skills: Joi.array().items(skillSchema).min(1).required(),
 
   distribution: Joi.object({
     mcq: Joi.number().integer().min(0).required(),
