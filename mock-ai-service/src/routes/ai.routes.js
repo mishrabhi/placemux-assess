@@ -1,5 +1,5 @@
 import express from "express";
-import { generateQuestions, evaluateAssesssment } from "../controllers/ai.controller.js";
+import { generateQuestions, evaluateAssessment } from "../controllers/ai.controller.js";
 
 const router = express.Router();
 

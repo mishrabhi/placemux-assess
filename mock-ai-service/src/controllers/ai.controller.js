@@ -7,7 +7,7 @@ export const generateQuestions = async (req, res) => {
     return res.status(200).json({
       success: true,
       message: "Questions generated successfully.",
-      ...result,
+      data: result,
     });
   } catch (error) {
     console.error("AI Generation Error:", error);
@@ -26,9 +26,7 @@ export const evaluateAssessment = async (req, res) => {
 
     return res.status(200).json({
       success: true,
-
       message: "Assessment evaluated successfully.",
-
       data: result,
     });
   } catch (error) {
