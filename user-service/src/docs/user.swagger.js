@@ -136,3 +136,27 @@
  *       500:
  *         description: Internal server error
  */
+
+/**
+ * @swagger
+ * /api/users/skills:
+ *   get:
+ *     summary: Get available skills from local cache
+ *     tags: [Users]
+ *
+ *     responses:
+ *
+ *       200:
+ *         description: Available skills fetched successfully
+ *         content:
+ *           application/json:
+ *             example:
+ *               success: true
+ *               data:
+ *                 - skillId: 687f43da7abf2bc1234
+ *                   name: JavaScript
+ *                   category: programming
+ *
+ *       500:
+ *         description: Internal server error
+ */
