@@ -12,13 +12,13 @@ export const addSkillsSchema = Joi.object({
   skills: Joi.array()
     .items(
       Joi.object({
-        skillId: Joi.string().required(),
+        skillId: Joi.string().hex().length(24).required(),
 
         skillName: Joi.string()
           .trim()
-          .required()
+          .required(),
       })
     )
     .min(1)
-    .required()
+    .required(),
 });

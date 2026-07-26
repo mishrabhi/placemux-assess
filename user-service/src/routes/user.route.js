@@ -6,6 +6,7 @@ import {
   getProfile,
   updateProfile,
   addSkills,
+  getAvailableSkills,
 } from "../controllers/user.controller.js";
 
 import {
@@ -20,5 +21,7 @@ router.get("/profile", verifyJWT, getProfile);
 router.put("/profile", verifyJWT, validate(updateProfileSchema), updateProfile);
 
 router.post("/profile/skills", verifyJWT, validate(addSkillsSchema), addSkills);
+
+router.get("/skills", getAvailableSkills);
 
 export default router;

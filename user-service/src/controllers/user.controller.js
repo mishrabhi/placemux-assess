@@ -28,3 +28,9 @@ export const addSkills = asyncHandler(async (req, res) => {
     .status(200)
     .json(new ApiResponse(200, profile, "Skills added successfully"));
 });
+
+export const getAvailableSkills = asyncHandler(async (req, res) => {
+  const skills = await userService.getAvailableSkills();
+
+  res.status(200).json(new ApiResponse(200, skills));
+});

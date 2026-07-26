@@ -1,5 +1,4 @@
 import Joi from "joi";
-import errorResponse from "../middlewares/error.middleware.js";
 
 const schemas = {
   signup: Joi.object({
@@ -32,8 +31,8 @@ function validate(schemaName) {
   return (req, res, next) => {
     const schema = schemas[schemaName];
     if (!schema) {
-      return errorResponse(res, {
-        statusCode: 500,
+      return res.status(500).json({
+        success: false,
         message: `Unknown validation schema: ${schemaName}`,
       });
     }
@@ -45,8 +44,8 @@ function validate(schemaName) {
 
     if (error) {
       const errors = error.details.map((d) => d.message);
-      return errorResponse(res, {
-        statusCode: 400,
+      return res.status(400).json({
+        success: false,
         message: "Validation failed",
         errors,
       });

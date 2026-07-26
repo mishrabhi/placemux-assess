@@ -15,16 +15,30 @@ class AIQuestionService {
       distribution,
     } = payload;
 
-    // Validate Skills
+    // Validate Skills by canonical Skill IDs and names
+    const skillIds = skills.map((skill) => skill.skillId);
+
     const existingSkills = await Skill.find({
-      name: {
-        $in: skills.map((skill) => skill.skillName),
+      _id: {
+        $in: skillIds,
       },
       isActive: true,
     });
 
     if (existingSkills.length !== skills.length) {
       throw new ApiError(400, "One or more selected skills are invalid.");
+    }
+
+    const skillMap = new Map(
+      existingSkills.map((skill) => [skill._id.toString(), skill.name]),
+    );
+
+    for (const skill of skills) {
+      const expectedName = skillMap.get(skill.skillId);
+
+      if (!expectedName || expectedName !== skill.skillName) {
+        throw new ApiError(400, "One or more selected skills are invalid.");
+      }
     }
 
     // Prepare AI Request

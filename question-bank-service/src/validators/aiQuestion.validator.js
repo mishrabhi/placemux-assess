@@ -1,7 +1,7 @@
 import Joi from "joi";
 
 const skillSchema = Joi.object({
-  skillId: Joi.string().trim().required(),
+  skillId: Joi.string().hex().length(24).required(),
 
   skillName: Joi.string().trim().required(),
 
