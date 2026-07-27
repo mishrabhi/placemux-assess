@@ -1,7 +1,11 @@
 import Joi from "joi";
 
-export const createSkillSchema = Joi.object({
-    name:Joi.string().required(),
-
-    category:Joi.string().required()
+const skillSchema = Joi.object({
+  name: Joi.string().trim().required(),
+  category: Joi.string().trim().required(),
 });
+
+export const createSkillSchema = Joi.alternatives().try(
+  skillSchema,
+  Joi.array().items(skillSchema).min(1),
+);

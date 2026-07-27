@@ -18,6 +18,6 @@ router.post(
   validate(createSkillSchema),
   createSkill,
 );
-router.get("/", auth, authorize("admin"), getAllSkills);
+router.get("/", getAllSkills);
 router.delete("/:id", auth, authorize("admin"), deleteSkill);
 export default router;

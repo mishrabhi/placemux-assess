@@ -59,12 +59,18 @@ class UserService {
       throw new ApiError(400, `Invalid skillIds: ${missing.join(",")}`);
     }
 
-    // build canonical selectedSkills from cache
-    profile.selectedSkills = found.map((skill) => ({
-      skillId: skill.skillId,
-      skillName: skill.name,
-      selectedAt: new Date(),
-    }));
+    // merge validated skills into existing profile selections
+    const existingSkillIds = new Set(profile.selectedSkills.map((s) => s.skillId));
+
+    const newSelectedSkills = found
+      .filter((skill) => !existingSkillIds.has(skill.skillId))
+      .map((skill) => ({
+        skillId: skill.skillId,
+        skillName: skill.name,
+        selectedAt: new Date(),
+      }));
+
+    profile.selectedSkills = [...profile.selectedSkills, ...newSelectedSkills];
 
     await profile.save();
 

@@ -103,24 +103,30 @@
  *         application/json:
  *           schema:
  *             type: object
- *
+ *             required:
+ *               - skills
  *             properties:
- *
  *               skills:
  *                 type: array
- *
+ *                 minItems: 1
  *                 items:
  *                   type: object
- *
+ *                   required:
+ *                     - skillId
+ *                     - skillName
  *                   properties:
- *
  *                     skillId:
  *                       type: string
  *                       example: 687f43da7abf2bc1234
- *
  *                     skillName:
  *                       type: string
  *                       example: Node.js
+ *           example:
+ *             skills:
+ *               - skillId: 687f43da7abf2bc1234
+ *                 skillName: Node.js
+ *               - skillId: 687f43da7abf2bc1234
+ *                 skillName: Express
  *
  *     responses:
  *

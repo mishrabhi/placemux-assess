@@ -9,7 +9,7 @@
  * @swagger
  * /api/skills:
  *   post:
- *     summary: Create Skill
+ *     summary: Create Skills
  *     tags: [Skills]
  *     security:
  *       - bearerAuth: []
@@ -19,17 +19,24 @@
  *       content:
  *         application/json:
  *           schema:
- *             type: object
- *             required:
- *               - name
- *               - category
- *             properties:
- *               name:
- *                 type: string
- *                 example: Node.js
- *               category:
- *                 type: string
- *                 example: Backend
+ *             type: array
+ *             items:
+ *               type: object
+ *               required:
+ *                 - name
+ *                 - category
+ *               properties:
+ *                 name:
+ *                   type: string
+ *                   example: Node.js
+ *                 category:
+ *                   type: string
+ *                   example: Backend
+ *           example:
+ *             - name: Node.js
+ *               category: Backend
+ *             - name: Express
+ *               category: Backend
  *
  *     responses:
  *       201:
