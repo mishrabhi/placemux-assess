@@ -3,6 +3,7 @@ import QuestionSnapshot from "../models/questionSnapshot.model.js";
 
 import UserClient from "../integrations/user.client.js";
 import QuestionBankClient from "../integrations/questionBank.client.js";
+import EvaluationClient from "../integrations/evaluation.client.js";
 
 import ApiError from "../utils/ApiError.js";
 import CandidateAnswer from "../models/candidateAnswer.model.js";
@@ -103,11 +104,15 @@ class AssessmentService {
      */
     return {
       assessmentId: assessment.assessmentId,
-
       durationMinutes: assessment.durationMinutes,
-
       questionCount: assessment.questionCount,
-
+      answeredCount: assessment.answeredCount,
+      attemptedCount: assessment.attemptedCount,
+      lastAnsweredAt: assessment.lastAnsweredAt,
+      submissionAnswerCount: assessment.submissionAnswerCount,
+      progressPercent: assessment.progressPercent,
+      markedForReviewCount: assessment.markedForReviewCount,
+      skippedCount: assessment.skippedCount,
       questions: questionsForCandidate,
     };
   }
@@ -138,6 +143,21 @@ class AssessmentService {
       throw new ApiError(404, "Question not found for this assessment.");
     }
 
+    const existingAnswer = await CandidateAnswer.findOne({
+      assessmentId,
+      questionId: payload.questionId,
+    });
+
+    const isNewAnswer = !existingAnswer;
+
+    const previouslyAnswered = Boolean(
+      existingAnswer?.selectedAnswer || existingAnswer?.codingSubmission,
+    );
+
+    const nowAnswered = Boolean(
+      payload.selectedAnswer || payload.codingSubmission,
+    );
+
     const answer = await CandidateAnswer.findOneAndUpdate(
       {
         assessmentId,
@@ -159,6 +179,31 @@ class AssessmentService {
         new: true,
       },
     );
+
+    const update = {
+      lastAnsweredAt: new Date(),
+    };
+
+    if (isNewAnswer) {
+      update.attemptedCount = (assessment.attemptedCount || 0) + 1;
+    }
+
+    const answeredCountDelta = nowAnswered && !previouslyAnswered ? 1 : 0;
+
+    if (answeredCountDelta > 0) {
+      update.answeredCount = (assessment.answeredCount || 0) + 1;
+    }
+
+    const updatedAnsweredCount =
+      (assessment.answeredCount || 0) + answeredCountDelta;
+
+    if (assessment.questionCount > 0) {
+      update.progressPercent = Math.round(
+        (updatedAnsweredCount / assessment.questionCount) * 100,
+      );
+    }
+
+    await Assessment.findOneAndUpdate({ assessmentId }, update);
 
     return answer;
   }
@@ -215,11 +260,59 @@ class AssessmentService {
       throw new ApiError(400, "Assessment already submitted.");
     }
 
-    assessment.status = "submitted";
+    const answers = await CandidateAnswer.find({ assessmentId });
 
+    const answeredCount = answers.filter(
+      (answer) => answer.selectedAnswer || answer.codingSubmission,
+    ).length;
+
+    const markedForReviewCount = answers.filter(
+      (answer) => answer.markedForReview).length;
+
+    const submissionAnswerCount = answers.length;
+
+    const skippedCount = Math.max(
+      0,
+      assessment.questionCount - answeredCount,
+    );
+
+    assessment.status = "submitted";
     assessment.submittedAt = new Date();
+    assessment.answeredCount = answeredCount;
+    assessment.attemptedCount = submissionAnswerCount;
+    assessment.submissionAnswerCount = submissionAnswerCount;
+    assessment.markedForReviewCount = markedForReviewCount;
+    assessment.skippedCount = skippedCount;
+    assessment.progressPercent = assessment.questionCount
+      ? Math.round((answeredCount / assessment.questionCount) * 100)
+      : 0;
 
     await assessment.save();
+
+    if (
+      process.env.EVALUATION_SERVICE_URL &&
+      process.env.SERVICE_TOKEN &&
+      assessment.status === "submitted"
+    ) {
+      try {
+        const evaluationResult = await EvaluationClient.evaluateAssessment(
+          process.env.SERVICE_TOKEN,
+          assessment.assessmentId,
+        );
+
+        if (evaluationResult?.totalScore != null) {
+          assessment.status = "evaluated";
+          assessment.evaluatedAt = new Date();
+          assessment.score = evaluationResult.totalScore;
+          await assessment.save();
+        }
+      } catch (err) {
+        console.error(
+          "Evaluation service call failed during submit:",
+          err.message,
+        );
+      }
+    }
 
     return assessment;
   }

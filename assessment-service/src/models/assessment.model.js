@@ -39,6 +39,41 @@ const assessmentSchema = new mongoose.Schema(
       default: 0,
     },
 
+    answeredCount: {
+      type: Number,
+      default: 0,
+    },
+
+    attemptedCount: {
+      type: Number,
+      default: 0,
+    },
+
+    lastAnsweredAt: {
+      type: Date,
+      default: null,
+    },
+
+    submissionAnswerCount: {
+      type: Number,
+      default: 0,
+    },
+
+    progressPercent: {
+      type: Number,
+      default: 0,
+    },
+
+    markedForReviewCount: {
+      type: Number,
+      default: 0,
+    },
+
+    skippedCount: {
+      type: Number,
+      default: 0,
+    },
+
     score: {
       type: Number,
       default: null,

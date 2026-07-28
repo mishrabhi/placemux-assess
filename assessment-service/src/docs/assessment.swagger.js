@@ -67,6 +67,21 @@
  *
  *       201:
  *         description: Assessment started successfully.
+ *         content:
+ *           application/json:
+ *             example:
+ *               success: true
+ *               data:
+ *                 assessmentId: assess_001
+ *                 durationMinutes: 60
+ *                 questionCount: 20
+ *                 answeredCount: 0
+ *                 attemptedCount: 0
+ *                 lastAnsweredAt: null
+ *                 submissionAnswerCount: 0
+ *                 progressPercent: 0
+ *                 skippedCount: 20
+ *                 questions: []
  *
  *       400:
  *         description: Validation failed.
@@ -166,6 +181,20 @@
  *     responses:
  *       200:
  *         description: Assessment submitted successfully.
+ *         content:
+ *           application/json:
+ *             example:
+ *               success: true
+ *               data:
+ *                 assessmentId: assess_001
+ *                 status: submitted
+ *                 submittedAt: 2026-07-27T12:00:00.000Z
+ *                 answeredCount: 15
+ *                 attemptedCount: 15
+ *                 submissionAnswerCount: 15
+ *                 markedForReviewCount: 2
+ *                 skippedCount: 5
+ *                 progressPercent: 75
  */
 
 /**
