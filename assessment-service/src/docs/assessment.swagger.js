@@ -160,6 +160,24 @@
  *     responses:
  *       200:
  *         description: Assessment fetched successfully.
+ *         content:
+ *           application/json:
+ *             example:
+ *               success: true
+ *               data:
+ *                 assessment:
+ *                   assessmentId: assess_001
+ *                   candidateId: user_123
+ *                   status: in_progress
+ *                   questionCount: 20
+ *                   answeredCount: 3
+ *                   attemptedCount: 3
+ *                   progressPercent: 15
+ *                   submissionAnswerCount: 0
+ *                   markedForReviewCount: 1
+ *                   skippedCount: 17
+ *                 questions: []
+ *                 answers: []
  */
 
 /**

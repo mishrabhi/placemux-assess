@@ -188,10 +188,17 @@ class AssessmentService {
       update.attemptedCount = (assessment.attemptedCount || 0) + 1;
     }
 
-    const answeredCountDelta = nowAnswered && !previouslyAnswered ? 1 : 0;
+    const answeredCountDelta = nowAnswered === previouslyAnswered
+      ? 0
+      : nowAnswered
+        ? 1
+        : -1;
 
-    if (answeredCountDelta > 0) {
-      update.answeredCount = (assessment.answeredCount || 0) + 1;
+    if (answeredCountDelta !== 0) {
+      update.answeredCount = Math.max(
+        0,
+        (assessment.answeredCount || 0) + answeredCountDelta,
+      );
     }
 
     const updatedAnsweredCount =
@@ -199,7 +206,7 @@ class AssessmentService {
 
     if (assessment.questionCount > 0) {
       update.progressPercent = Math.round(
-        (updatedAnsweredCount / assessment.questionCount) * 100,
+        (Math.max(0, updatedAnsweredCount) / assessment.questionCount) * 100,
       );
     }
 
