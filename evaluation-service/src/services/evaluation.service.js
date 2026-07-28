@@ -31,6 +31,13 @@ class EvaluationService {
       accessToken,
     );
 
+    if (assessmentData.assessment.status !== "submitted") {
+      throw new ApiError(
+        400,
+        "Assessment must be submitted before it can be evaluated.",
+      );
+    }
+
     if (user.role !== "admin" && assessmentData.assessment.candidateId !== user.userId) {
       throw new ApiError(403, "Forbidden.");
     }

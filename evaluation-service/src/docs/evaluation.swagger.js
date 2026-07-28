@@ -23,12 +23,9 @@
  *
  *           schema:
  *             type: object
- *
  *             required:
  *               - assessmentId
- *
  *             properties:
- *
  *               assessmentId:
  *                 type: string
  *                 example: ASM-20260722-A91D82F7
@@ -36,6 +33,18 @@
  *     responses:
  *       201:
  *         description: Assessment evaluated successfully.
+ *         content:
+ *           application/json:
+ *             example:
+ *               success: true
+ *               data:
+ *                 evaluationId: eval_001
+ *                 assessmentId: ASM-20260722-A91D82F7
+ *                 totalScore: 80
+ *                 maxScore: 100
+ *                 percentage: 80
+ *                 passed: true
+ */
  *
  *       404:
  *         description: Assessment not found.
