@@ -16,7 +16,6 @@ This repository contains the main services required for the platform:
 - `proctoring-service`
 - `evaluation-service`
 - `mock-ai-service`
-- `shared`
 - `docs`
 
 
