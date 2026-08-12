@@ -44,7 +44,9 @@
  *                 maxScore: 100
  *                 percentage: 80
  *                 passed: true
- */
+ *
+ *       400:
+ *         description: Assessment must be submitted before evaluation.
  *
  *       404:
  *         description: Assessment not found.
