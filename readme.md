@@ -1,11 +1,11 @@
 # placemux-assess
 
-> A modular Node.js + Express assessment platform with AI-powered question generation, candidate skill profiles, and AI-driven evaluation.
+> A modular Node.js + Express assessment platform with AI-powered question generation, candidate skill profiles, proctoring, and AI-driven evaluation.
 
 
 ## Overview
 
-`placemux-assess` is a microservice-based assessment platform built to simulate a real-world online examination system. It separates responsibilities across services so that user profiles, questions, assessment sessions, AI evaluation, and the external AI generator can evolve independently.
+`placemux-assess` is a microservice-based assessment platform that simulates a complete online exam workflow. Candidates register, select skills, receive AI-generated questions, complete a proctored assessment, and get AI-evaluated results.
 
 This repository contains the main services required for the platform:
 - `api-gateway`
@@ -13,6 +13,7 @@ This repository contains the main services required for the platform:
 - `user-service`
 - `question-bank-service`
 - `assessment-service`
+- `proctoring-service`
 - `evaluation-service`
 - `mock-ai-service`
 - `shared`
@@ -21,53 +22,63 @@ This repository contains the main services required for the platform:
 
 ## Key Concepts
 
-- **Skill-based assessments:** Candidates select skills once in their profile. Those skills are used to generate assessment questions.
-- **Question generation service:** `question-bank-service` validates skills and forwards the assessment blueprint to `mock-ai-service`.
-- **Assessment orchestration:** `assessment-service` manages the lifecycle of assessments, saves question snapshots, tracks answers, and handles submission.
-- **Evaluation service:** `evaluation-service` grades submitted assessments using the stored questions and candidate answers.
-- **Internal service authentication:** `SERVICE_TOKEN` is used for trusted service-to-service calls when configured.
+- **Skill-based assessments:** Candidates store skill selections once, and assessments are generated from those skills.
+- **AI question generation:** `question-bank-service` validates the assessment blueprint and forwards generation requests to `mock-ai-service`.
+- **Live proctoring:** `proctoring-service` monitors suspicious activity and can warn or terminate the assessment.
+- **Assessment orchestration:** `assessment-service` manages creation, answer saving, and submission.
+- **AI evaluation:** `evaluation-service` grades submitted assessments using the mock AI evaluator.
+- **API gateway:** `api-gateway` routes external requests to the appropriate internal services.
 
 
-## Actual Service List
+## Service List
 
-| Service | Port | Responsibility |
+| Service | Default Port | Responsibility |
 |---|---|---|
-| api-gateway | 3000 | Optional gateway if used; routes requests into services |
+| api-gateway | 3000 | Public entrypoint and proxy to internal services |
 | auth-service | 3001 | User authentication, JWT issuance, refresh tokens |
-| user-service | 3002 | Candidate profile, skills cache, skill selection storage |
-| question-bank-service | 3003 | Skill catalog, question generation orchestration |
-| assessment-service | 3004 | Assessment session lifecycle, question snapshots, answer progress |
-| proctoring-service | 3005 | Live proctoring, violation warnings, assessment termination |
-| evaluation-service | 3006 | Assessment evaluation, grading, result reporting |
-| mock-ai-service | 3007 | Mock AI question generator and evaluator |
+| user-service | 3002 | Candidate profile and skill selection storage |
+| question-bank-service | 3003 | Skill validation and question generation orchestration |
+| assessment-service | 3004 | Assessment lifecycle, question snapshots, answer tracking |
+| proctoring-service | 3005 | Live proctoring, warning/termination decisions |
+| evaluation-service | 3006 | Evaluation orchestration and result storage |
+| mock-ai-service | 4000 | Mock AI provider for question generation and evaluation |
 
 
-## High-level Flow
+## End-to-end Flow
 
-1. **Candidate signs up / logs in** using `auth-service`.
-2. **Candidate selects skills** in `user-service` via `/api/users/profile/skills`.
-3. **Assessment start:** Client calls `assessment-service` `/api/assessments/start`.
-   - `assessment-service` fetches candidate profile from `user-service`.
-   - It ensures selected skills exist and are non-empty.
-   - Builds an assessment blueprint with skills, experience level, difficulty, and distribution.
-4. **Question generation:** `assessment-service` calls `question-bank-service` `/api/questions/generate`.
-   - `question-bank-service` validates skill IDs and names.
-   - It forwards the blueprint to `mock-ai-service` for actual question generation.
-5. **Assessment creation:** `assessment-service` stores the assessment record and question snapshots.
-6. **Answer saving:** Candidate saves each answer with `/api/assessments/:assessmentId/answer`.
-   - `assessment-service` tracks answered count, attempted count, marked-for-review count, and progress percent.
-7. **Submission:** Candidate submits with `/api/assessments/:assessmentId/submit`.
-   - `assessment-service` counts answers and skipped questions.
-   - It updates submission stats and progress.
-   - If configured, it calls `evaluation-service` to grade the assessment and transition the status to `evaluated`.
-8. **Evaluation:** `evaluation-service` fetches assessment data from `assessment-service`, invokes AI evaluation, and saves the result.
+1. **Signup / login**
+   - Candidate authenticates using `auth-service`.
+2. **Skill selection**
+   - Candidate stores skills in `user-service`.
+3. **Start assessment**
+   - Client calls `/api/assessments/start` through `api-gateway`.
+   - `assessment-service` fetches candidate skills from `user-service` and builds an assessment blueprint.
+4. **Question generation**
+   - `assessment-service` sends the blueprint to `question-bank-service`.
+   - `question-bank-service` validates skills and forwards the request to `mock-ai-service`.
+   - `mock-ai-service` returns generated questions.
+5. **Assessment creation**
+   - `assessment-service` saves the assessment and question snapshots.
+   - The candidate begins the assessment with questions delivered.
+6. **Live proctoring**
+   - Client sends proctoring events to `proctoring-service`.
+   - `proctoring-service` logs violations, sends warnings, and can terminate the session.
+7. **Save answers**
+   - Candidate saves answers via `/api/assessments/:assessmentId/answer`.
+8. **Submit assessment**
+   - Candidate submits with `/api/assessments/:assessmentId/submit`.
+   - `assessment-service` updates answer statistics and marks the assessment submitted.
+9. **Evaluation**
+   - `assessment-service` calls `evaluation-service`.
+   - `evaluation-service` sends answers to `mock-ai-service` for grading.
+   - Final results are persisted and can be retrieved.
 
 
-## Current Improvements implemented
+## Implemented Improvements
 
-- `selectedSkills` are stored as an array in `user-service`.
-- `question-bank-service` can accept batch skill creation and validates arrays of skills.
-- `assessment-service` now tracks:
+- Candidate skills are stored and reused for assessment generation.
+- `question-bank-service` validates skill data before forwarding requests to the AI service.
+- `assessment-service` tracks:
   - `answeredCount`
   - `attemptedCount`
   - `lastAnsweredAt`
@@ -75,61 +86,80 @@ This repository contains the main services required for the platform:
   - `progressPercent`
   - `markedForReviewCount`
   - `skippedCount`
-- `submitAssessment` collects answer stats and persists them on the assessment record.
-- `evaluation-service` accepts an internal `SERVICE_TOKEN` for trusted service-to-service calls.
+- `proctoring-service` logs violations, manages warning counts, and can request assessment termination.
+- `evaluation-service` supports secure internal service communication using `SERVICE_TOKEN`.
 
 
 ## Architecture Details
 
-### Skill selection
-- Candidate skills are selected once in `user-service`.
-- Those skills are reused by `assessment-service` when starting an assessment.
-- `question-bank-service` validates skill IDs/names and uses them for question generation.
+### Proctoring
+- `proctoring-service` monitors candidate behavior during assessment.
+- It logs violations and emits `warning` or `terminated` events.
+- On termination, it calls `assessment-service` to mark the assessment as `barred`.
 
-### Assessment lifecycle
-- `assessment-service` creates an assessment record with `questionCount` and creates snapshots for each generated question.
-- Answers are stored in `CandidateAnswer` documents.
-- Submission updates assessment progress and optionally triggers grading.
+### Question generation
+- `question-bank-service` validates the request and uses `mock-ai-service` for question creation.
+- `mock-ai-service` is a stubbed AI backend that can be replaced with a real provider.
 
-### Evaluation flow
-- `evaluation-service` is responsible for grading only submitted assessments.
-- It retrieves full assessment payload from `assessment-service` and sends it to `mock-ai-service` for evaluation.
-- Results are saved in `evaluation-service` with a separate evaluation document.
-
-
-## Environment and setup
-
-Each service should have its own `.env` file and MongoDB connection. The key shared variables are:
-- `JWT_ACCESS_SECRET`
-- `REQUEST_TIMEOUT`
-- `SERVICE_TOKEN` (for trusted service-to-service communication)
-- `USER_SERVICE_URL`, `QUESTION_BANK_SERVICE_URL`, `ASSESSMENT_SERVICE_URL`, `EVALUATION_SERVICE_URL`, `AI_SERVICE_URL`
+### Evaluation
+- `evaluation-service` evaluates only submitted assessments.
+- It requests grading from `mock-ai-service` and saves the evaluation output.
 
 
 ## API documentation
 
-- Service-specific Swagger docs are available under each service's `src/docs` folder.
-- Main API contract files are:
+- Each service exposes Swagger docs under its `src/docs` folder.
+- Main API contract files:
   - `auth-service/src/docs/swagger.js`
   - `user-service/src/docs/user.swagger.js`
   - `question-bank-service/src/docs/ai-question.swagger.js`
   - `assessment-service/src/docs/assessment.swagger.js`
+  - `proctoring-service/src/docs/proctoring.swagger.js`
   - `evaluation-service/src/docs/evaluation.swagger.js`
 
 
-## How to run locally
+## Environment and setup
 
-1. Install dependencies per service with `npm install`.
+Each service needs its own `.env` file and MongoDB connection. Shared environment variables include:
+- `JWT_ACCESS_SECRET`
+- `REQUEST_TIMEOUT`
+- `SERVICE_TOKEN` (for trusted service-to-service calls)
+- `AUTH_SERVICE_URL`
+- `USER_SERVICE_URL`
+- `QUESTION_BANK_SERVICE_URL`
+- `ASSESSMENT_SERVICE_URL`
+- `PROCTORING_SERVICE_URL`
+- `EVALUATION_SERVICE_URL`
+- `AI_SERVICE_URL`
+
+
+## Run locally
+
+1. Install dependencies per service:
+   ```bash
+   cd <service-folder>
+   npm install
+   ```
 2. Start MongoDB locally or via Docker.
-3. Configure each service's `.env` with the correct URLs and secrets.
-4. Start services individually with `npm run dev` in each folder.
+3. Create `.env` files for each service and configure URLs and secrets.
+4. Start services in this order:
+   - `auth-service`
+   - `user-service`
+   - `question-bank-service`
+   - `mock-ai-service`
+   - `proctoring-service`
+   - `assessment-service`
+   - `evaluation-service`
+   - `api-gateway`
+5. Use `http://localhost:3000` through `api-gateway` for client requests.
 
 
 ## Notes
 
-- This repo is built for a microservice architecture and intentionally keeps service boundaries clean.
-- The evaluation path uses `SERVICE_TOKEN` when configured, but also supports normal JWT auth for admin requests.
-- `mock-ai-service` is currently a stubbed AI provider used by the question bank and evaluation services.
+- `api-gateway` is the recommended public entrypoint.
+- `mock-ai-service` is a simulated AI provider used by both question generation and evaluation.
+- The current repository includes the full end-to-end assessment workflow with live proctoring.
+- Future enhancements can include a production-ready frontend proctoring integration and a real AI backend.
 
 
 
