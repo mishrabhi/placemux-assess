@@ -4,6 +4,7 @@ import {
   saveAnswer,
   getAssessment,
   submitAssessment,
+  terminateAssessment,
   getHistory,
   getInternalAssessment
 } from "../controllers/assessment.controller.js";
@@ -51,6 +52,15 @@ router.get(
  * Get Assessment
  */
 router.get("/:assessmentId", auth, getAssessment);
+
+/**
+ * Terminate Assessment
+ */
+router.patch(
+  "/:assessmentId/terminate",
+  auth,
+  terminateAssessment,
+);
 
 /**
  * Submit Assessment

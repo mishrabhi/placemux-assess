@@ -64,6 +64,20 @@ export const submitAssessment = asyncHandler(async (req, res) => {
     );
 });
 
+//terminate assessment
+export const terminateAssessment = asyncHandler(async (req, res) => {
+  const assessment = await AssessmentService.terminateAssessment(
+    req.params.assessmentId,
+    req.user,
+  );
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(200, assessment, "Assessment terminated successfully."),
+    );
+});
+
 //getHistory
 export const getHistory = asyncHandler(async (req, res) => {
   const history = await AssessmentService.getHistory(req.user.userId);

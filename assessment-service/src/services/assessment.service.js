@@ -325,6 +325,33 @@ class AssessmentService {
   }
 
   /**
+   * Terminate Assessment
+   */
+  async terminateAssessment(assessmentId, user) {
+    const assessment = await Assessment.findOne({
+      assessmentId,
+    });
+
+    if (!assessment) {
+      throw new ApiError(404, "Assessment not found.");
+    }
+
+    if (user.role !== "admin") {
+      throw new ApiError(403, "Forbidden.");
+    }
+
+    if (assessment.status !== "in_progress") {
+      throw new ApiError(400, "Only active assessments can be terminated.");
+    }
+
+    assessment.status = "barred";
+    assessment.submittedAt = new Date();
+    await assessment.save();
+
+    return assessment;
+  }
+
+  /**
    * Get History
    */
   async getHistory(candidateId) {

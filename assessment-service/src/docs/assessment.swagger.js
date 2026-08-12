@@ -227,4 +227,27 @@
  *     responses:
  *       200:
  *         description: Assessment history fetched successfully.
+ *         content:
+ *           application/json:
+ *             example:
+ *               success: true
+ *               data:
+ *                 - assessmentId: assess_001
+ *                   status: submitted
+ *                   questionCount: 20
+ *                   answeredCount: 15
+ *                   attemptedCount: 15
+ *                   submissionAnswerCount: 15
+ *                   markedForReviewCount: 2
+ *                   skippedCount: 5
+ *                   progressPercent: 75
+ *                 - assessmentId: assess_002
+ *                   status: evaluated
+ *                   questionCount: 20
+ *                   answeredCount: 20
+ *                   attemptedCount: 20
+ *                   submissionAnswerCount: 20
+ *                   markedForReviewCount: 0
+ *                   skippedCount: 0
+ *                   progressPercent: 100
  */
